@@ -608,7 +608,7 @@ void() flytrain_setup =
 			self.takedamage = DAMAGE_YES;
 		}
 	}
-	
+
 	self.dest_x = 3 + random();
 	self.dest_y = 1 + random();
 	self.dest_z = 4 + random();
@@ -920,7 +920,7 @@ void() func_train_setup =
 		self.speed = 100;
 	if (!self.target && !self.enemy)
 		objerror("func_train without a target");
-	
+
 	self.dmg = zeroconvertdefault(self.dmg, 2);
 	if (!self.dmgtime)
 		self.dmgtime = 0.5;

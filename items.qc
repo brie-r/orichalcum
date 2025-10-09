@@ -57,7 +57,7 @@ void() ItemUse =
 		self.think = SUB_Remove;	// if nextthink is in the future, don't respawn again
 		return;
 	}
-	
+
 	self.alpha = 1;
 	ItemSpawn();
 }
@@ -613,7 +613,7 @@ float(entity e) target_items_takeinv =
 		if (e.health <= 0)
 			return FALSE;
 	}
-		
+
 	if (self.svflags)
 	{
 		float sf = zeroconvert(self.svflags);
@@ -681,11 +681,11 @@ float(entity e) target_items_takeinv =
 			key_take_silver(e);
 		if (it & IT_KEY2)
 			key_take_gold(e);
-			
+
 	}
 	
 	target_items_setweapon(e);
-	
+		
 	return TRUE;
 }
 

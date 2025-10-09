@@ -1005,7 +1005,7 @@ void () secretdoor_move4 =
 	self.state = STATE_DOWN;
 	if (self.noise2 != string_null)
 		sound(self, CHAN_VOICE, self.noise2, 1, ATTN_NORM);
-	SUB_CalcMoveLight(self.dest2, self.dest1, self.speed2, secretdoor_move5, TRUE);
+	SUB_CalcMoveLight(self.dest2, self.dest1, self.speed2, secretdoor_move5, TRUE);		
 }
 
 // Wait 1 second...

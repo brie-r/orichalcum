@@ -1329,3 +1329,136 @@ void() trigger_monsterjump_box =
 	self.classname = "trigger_monsterjump";
 }
 
+
+///////////////////////////////////////////////////////////////
+//trigger_look (a.k.a. trigger_onlookat from NullPointPaladin!)
+// Brought over to Metallicus from progs_dump
+///////////////////////////////////////////////////////////////
+void() onlookat_touch =
+{
+	if (self.customflags & CFL_LOCKED) return;
+	if (!CheckValidTouch()) return;
+
+  if (self.nextthink > time)
+  {
+        return;        // allready been triggered
+  }
+
+    //added player view offset to make this more accurate to the player crosshairs
+    local vector player_offset;
+    player_offset = other.origin + other.view_ofs;
+
+    makevectors(other.v_angle);
+
+    //using speed to determine the reach of the trace
+    if(!self.speed)
+        self.speed = 500;
+    traceline(player_offset, (player_offset + (v_forward * self.speed)), FALSE, other);
+
+    if ((trace_ent.targetname == self.target))
+    {
+        // Play message if available
+        if (self.message != "")
+        {
+            centerprint (other, self.message);
+        }
+        SUB_UseTargets();
+
+				if (self.noise != "")
+				sound (self, CHAN_VOICE, self.noise, 1, ATTN_NORM);
+				else
+				sound (self, CHAN_VOICE, self.noise1, 1, ATTN_NORM);
+
+        // added wait
+        if (self.wait > 0)
+        {
+            self.think = multi_wait;
+            self.nextthink = time + self.wait;
+        }
+        else
+        {    // we can't just remove (self) here, because this is a touch function
+            // called wheil C code is looping through area links...
+            self.touch = SUB_Null;
+            self.nextthink = time + 0.1;
+            self.think = SUB_Remove;
+        }
+    }
+}
+
+void() trigger_look_init =
+{
+	//play all the sounds available for a normal trigger
+    if (self.sounds == 0)
+    {
+        precache_sound ("misc/null.wav");
+        self.noise = "misc/null.wav";
+    }
+    else if (self.sounds == 1)
+    {
+        precache_sound ("misc/secret.wav");
+        self.noise = "misc/secret.wav";
+    }
+    else if (self.sounds == 2)
+    {
+        precache_sound ("misc/talk.wav");
+        self.noise = "misc/talk.wav";
+    }
+    else if (self.sounds == 3)
+    {
+        precache_sound ("misc/trigger1.wav");
+        self.noise = "misc/trigger1.wav";
+    }
+    else if (self.sounds == 4)
+    {
+			if (!self.noise1) //dumptruck_ds
+			{
+				objerror ("no soundfile set in noise1!\n");
+				remove(self);
+				return;
+			}
+			else
+        precache_sound (self.noise1);
+				self.noise = self.noise1;
+    }
+
+    self.touch = onlookat_touch;
+	self.use = multi_use;
+}
+/*QUAKED trigger_look (.5 .0 .5) ? ? ? TRIGGER_FIRST
+This will trigger when a player is within the brush trigger and looks directly at a target entity.
+Use the first target key for the "looked at entity" and use the subsequent targets (2-4) to trigger other events.
+
+Flags:
+"trigger_first" won't be touchable until triggered once by something else
+
+Keys:
+"speed" Distance from player to search for trigger, adjust if the target is too far from the trigger  (default 500 units)
+"wait" Time between re-triggering (default 0)
+"sounds" 0-3 are standard Quake trigger choices, 4 allows a custom sound requiring a path set in noise1 key
+"noise1" Path to custom sound. Use with sounds key set to 4  (e.g. fish/bite.wav)
+
+See the mapping guide for full details.
+*/
+/*FGD
+@SolidClass base(Trigger) = trigger_look : "Trigger: Trigger something when a player enters this volume and looks directly at a targeted brush entity. Use the first target key for the looked at item and subsequent targets to trigger events. Add a wait value to make this like a trigger_multiple"
+[
+	speed(integer) : "Distance from player to search for trigger, adjust if the target is too far from the trigger" : 500
+	wait(integer) : "Time between re-triggering"
+	sounds(choices) : "Sound style" : 0 =
+	[
+		0 : "None"
+		1 : "Secret sound"
+		2 : "Beep beep"
+		3 : "Large switch"
+		4 : "Custom sound, requires a path set in noise1 key"
+	]
+	noise1(string) : "Path to custom sound. Use with sounds key set to 4"
+]
+*/
+void() trigger_look =
+{
+    if (!SUB_ShouldSpawn()) return;
+	trigger_look_init();
+	InitTrigger();
+}
+

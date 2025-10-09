@@ -54,7 +54,7 @@ void() trigger_relay_use =
 		dprint("  trigger_relay is locked: not relaying\n");
 		return;
 	}
-	
+
 	if (self.spawnflags & SPAWN_RELAY_HOLD && self.attack_finished > time)
 	{
 		self.attack_finished = time + self.wait;
@@ -117,6 +117,7 @@ Keys:
 "sounds" same as other triggers, plays after 'delay'
 "noise" or, pick any wav
 "count" only fire this many times, then auto self-destruct
+"wait" seconds before firing second time if 'Hold' is used
 
 Spawnflags:
 "MSG_ONCE"	only print its message on the first firing, otherwise it prints every time
@@ -128,7 +129,8 @@ Alt Target Pattern: If 'Hold', 'target'/'target2' on first trigger, 'target3'/'t
 /*FGD
 @PointClass size(16 16 16) color(160 0 160) base(Appearflags, TriggerSounds, Target, Targetname, AltTarget) = trigger_relay : "Trigger: Relay.
 This fixed size trigger cannot be touched, it can only be fired by other events. Target this with a target_lock to selectively disable/reenable it for logic fun.
-The 'Hold' spawnflag will cause the relay to fire only the first time it is triggered (toggle on), and fire again after 'wait' seconds have passed without being triggered (toggle off)."
+The 'Hold' spawnflag will cause the relay to fire only the first time it is triggered (toggle on), and fire again after 'wait' seconds have passed without being triggered (toggle off).
+If 'Hold' is used, then with Alt Target Pattern, 'target'/'target2' on first trigger, 'target3'/'target4' on end trigger."
 [
 	spawnflags(flags) =	[
 		1 : "Only print message once" : 0
@@ -137,6 +139,7 @@ The 'Hold' spawnflag will cause the relay to fire only the first time it is trig
 	]
 	message(string) : "Print when triggered"
 	count(integer) : "Limit uses (then self destruct)" : 0
+	wait(string) : "If 'Hold' spawnflag is used, seconds before firing second time" : "0"
 ]
 */
 void() trigger_relay =

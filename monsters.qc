@@ -25,6 +25,11 @@ All things spawning and initializing
 	wait(string) : "If triggered: Pause before spawning" : "0"
 	rand(string) : "If triggered: Random extra time before spawning" : "0"
 	netname(string) : "If triggered: Spawned monster(s) will have this targetname"
+	no_infight(choices) : "If this is enabled, this individual won't infight ever (doesn't provoke and isn't provoked)" : 0 =
+	[
+		0 : "Disabled"
+		1 : "Enabled"
+	]
 ]
 */
 
@@ -56,9 +61,13 @@ void() TallyHitpoints =
 	
 	if (self.classname == "monster_army")
 		ammo_total += 5 * DEBUG_DMG_PER_SHELL;
+	if (self.classname == "monster_nailgunner" || self.classname == "monster_ogre_flak")
+		ammo_total += 5 * DEBUG_DMG_PER_NAIL;
 	//if (self.classname == "monster_enforcer")
 	//	ammo_total += 5 * DEBUG_DMG_PER_CELL;
-	if (self.classname == "monster_ogre")
+	if (self.classname == "monster_commando")
+		ammo_total += 2 * DEBUG_DMG_PER_CELL;
+	if (self.classname == "monster_ogre" || self.classname == "monster_ogre_marksman")
 		num_rockets += 1;
 }
 
@@ -263,6 +272,7 @@ entity( void() spawnthink ) mon_spawner_use =
 	mon.delay = self.delay;
 	mon.message = self.message;
 	mon.deathtype = self.deathtype;
+	mon.no_infight = self.no_infight;
 	SUB_CopyTargets(mon);
 	mon.targetname = self.netname;
 	
@@ -307,7 +317,7 @@ entity( void() spawnthink ) mon_spawner_use =
 	{
 		addmonster(1); // add them one at a time if this is an unlimited spawner
 	}
-	
+
 	// eliminate unnecessary frame of delay
 	if (pause == 0)
 		SUB_CallAsSelf(mon.think, mon);
@@ -417,7 +427,7 @@ float(float wake, float hurt, float bloody, float dead) monster_alt_use =
 			{
 				t.target3 = self.target3;
 				self.target3 = string_null;
-			}	
+			}
 		}
 		if (dead)
 		{
@@ -475,7 +485,7 @@ void() monster_death_use =
 {
 	if (!self.target && !self.target2 && !self.target3 && !self.target4 && !self.killtarget)
 		return;
-	
+		
 	// make a player activator even if the monster was killed while infighting
 	if (self.enemy.classname != "player")
 	{
@@ -485,10 +495,10 @@ void() monster_death_use =
 			activator = get_closest_client();
 	}
 	else activator = self.enemy;
-	
+
 	if (monster_alt_use((self.enemy.flags & FL_CLIENT), TRUE, TRUE, TRUE))
 		return;
-		
+	
 	SUB_UseTargets ();
 }
 
@@ -530,7 +540,7 @@ void() monster_start =
 			}
 		}
 	}
-	
+
 	// wait a few frames to make sure doors have spawned before doing droptofloor
 	self.nextthink = 1.15;
 	// why 1.15 is a magic number:
@@ -551,9 +561,28 @@ void() monster_start =
 	self.max_health = self.health;
 }
 
+// from Alkaline
+void() search_path_angry = {
+	entity path;
+	if (self.target)
+		path = find(world, targetname, self.target);
+	if (self.target2 && path.classname != "path_angry")
+		path = find(world, targetname, self.target2);
+	if (self.target3 && path.classname != "path_angry")
+		path = find(world, targetname, self.target3);
+	if (self.target4 && path.classname != "path_angry")
+		path = find(world, targetname, self.target4);
+	if (path) {
+		self.startpath = path;
+	}
+}
+
 void() monster_start_go =
 {
 	local entity pathgoal;
+
+	search_path_angry();
+
 	self.takedamage = DAMAGE_AIM;
 	
 	self.ideal_yaw = self.angles * '0 1 0';

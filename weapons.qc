@@ -111,7 +111,7 @@ void(entity e, float new) W_BetterWeapon =
 		// don't switch to a lightning gun when standing in water
 		if (e.waterlevel >= 2 && new == IT_LIGHTNING)
 			return;
-	}	
+	}
 	self = e;
 	if (!deathmatch || W_RankForWeapon (new) < W_RankForWeapon (self.weapon) )
 		W_Select(new);
@@ -139,7 +139,7 @@ float() W_BestWeapon =
 		return IT_SUPER_NAILGUN;
 	if(self.items & (IT_SUPER_SHOTGUN) && W_HasAmmo (IT_SUPER_SHOTGUN))
 		return IT_SUPER_SHOTGUN;
-
+	
 	if (self.items & (IT_LIGHTNING) && self.waterlevel <= 1 && W_HasAmmo(IT_LIGHTNING))
 		return IT_LIGHTNING;
 	if(self.items & (IT_NAILGUN) && W_HasAmmo(IT_NAILGUN))
@@ -153,7 +153,7 @@ float() W_BestWeapon =
 		return IT_ROCKET_LAUNCHER;
 	if(self.items & (IT_GRENADE_LAUNCHER) && W_HasAmmo (IT_GRENADE_LAUNCHER))
 		return IT_GRENADE_LAUNCHER;
-		
+
 	return 0;
 }
 

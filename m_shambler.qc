@@ -221,6 +221,34 @@ void() sham_melee =
 	self.lip += 0.5;
 }
 
+// J_D: for the Magma Hurler
+void() sham_melee2 =
+{
+	if (self.enemy.type == "zombie")
+	{
+		sham_smash1();	// just fuck up a zombie and get on with life
+		return;
+	}
+
+	float chance;
+	chance = random();
+	
+	// gradually building chance that the hurler will shoot instead of
+    // continuing to melee
+	if (chance < floor(self.lip) / 6.66)	// step up by 15% every other melee
+	{
+		sham_proj1();
+		return;
+	}
+	
+	if (chance > 0.4)
+		sham_swingr1 ();
+	else
+		sham_swingl1 ();
+
+	self.lip += 0.5;
+}
+
 
 //============================================================================
 
@@ -323,6 +351,81 @@ void() sham_magic12    =[      $magic12,      sham_run1	   ] {}
 // to fire nightmare-only triggers
 void() sham_magic11    =[      $magic11,      sham_magic12   ]{ if (skill >= 3) CastLightning(); }
 
+// ========
+// J_D: Magma Hurler shooting lavaball
+
+void() hurler_missile_touch =
+{
+	local float	damg;
+	if (skill == 3)
+		damg = 100 + random()*20;
+	else
+		damg = 50 + random()*10;
+
+	if (other == self.owner) return;		// don't explode on owner
+	if (CheckProjectilePassthru()) return;
+
+	if (pointcontents(self.origin) == CONTENT_SKY)
+	{
+		remove(self);
+		return;
+	}
+
+	if (other.health)
+	{
+		T_Damage (other, self, self.trueowner, damg, DMGTYPE_EXPLOSION | DMGTYPE_ZKILL );
+	}
+
+	// don't do radius damage to other, because all damage will be done in the impact
+	if (skill == 3)
+		T_RadiusDamage (self, self.trueowner, 120, other, DMGTYPE_EXPLOSION);
+	else
+		T_RadiusDamage (self, self.trueowner, 60, other, DMGTYPE_EXPLOSION);
+
+	self.origin = self.origin - 8*normalize(self.velocity);
+	T_ExplosiveTouch();
+}
+
+void() MagmaBall =
+{
+	vector org, vec;
+	entity missile;
+
+	org = self.origin + v_forward*8 + '0 0 24';
+	vec = normalize(enemy_vispos() - org + enemy_aim_vertical());
+
+	makevectors(self.angles);
+	if (angledif(self.ideal_yaw, self.angles_y) > 80)	// no ass lavaballs
+	{
+		vec_x = v_forward_x;
+		vec_y = v_forward_y;
+		vec = normalize(vec);
+	}
+
+	sound (self, CHAN_WEAPON, "boss1/throw.wav", 1, ATTN_NORM);
+	missile = launch_lavamissile (org, vec * 900);
+	missile.avelocity = '200 100 300';
+	missile.touch = hurler_missile_touch;
+}
+
+void() sham_proj1     =[      $smash1,       sham_proj2    ] {ai_face();self.lip = 0;}
+void() sham_proj2     =[      $smash2,       sham_proj3    ] {ai_face();}
+void() sham_proj3     =[      $smash3,       sham_proj4    ] {ai_face();}
+void() sham_proj4     =[      $smash4,       sham_proj5    ] {ai_face();}
+void() sham_proj5     =[      $smash5,       sham_proj6    ] {ai_face();}
+void() sham_proj6     =[      $smash6,       sham_proj7    ] {ai_face();}
+void() sham_proj7     =[      $smash7,       sham_proj8    ] {ai_face();}
+void() sham_proj8     =[      $smash8,       sham_proj9    ] {ai_face();}
+void() sham_proj9     =[      $smash9,       sham_proj10   ] {ai_face();}
+void() sham_proj10    =[      $smash10,      sham_proj11   ]
+{
+ai_face(); MagmaBall();
+}
+void() sham_proj11    =[      $smash11,      sham_proj12   ] {ai_face();}
+void() sham_proj12    =[      $smash12,      sham_run1	   ] {ai_face();}
+
+// ========
+
 
 void() sham_pain1       =[      $pain1, sham_pain2      ] {}
 void() sham_pain2       =[      $pain2, sham_pain3      ] {}
@@ -336,7 +439,17 @@ void(entity attacker, float damage)	sham_pain =
 {
 	if (self.health <= 0) return;	
 	if (self.pain_finished > time) return;
-	if (random()*400 > damage) return;		// didn't flinch
+
+	if (self.classname == "monster_magma_hurler")
+	{
+		if (random()*430 > damage)
+			return;		// didn't flinch
+	}
+	else
+	{
+		if (random()*400 > damage)
+			return;		// didn't flinch
+	}
 	
 	sound (self, CHAN_VOICE, "shambler/shurt2.wav", 1, ATTN_NORM);
 	PainFinished(2);
@@ -394,14 +507,23 @@ float() ShamCheckAttack =
 	if (!CheckClearAttack()) return FALSE;
 	
 	// missile attack
-	//if (enemy_range >= RANGE_FAR)
-	if (vlen(self.origin - enemy_vispos()) > SHAM_LIGHTNING_RANGE)
-		return FALSE;
-		
+	if (self.classname == "monster_magma_hurler")
+	{
+		if (enemy_range >= RANGE_FAR)
+			return FALSE;
+	}
+	else
+	{
+		if (vlen(self.origin - enemy_vispos()) > SHAM_LIGHTNING_RANGE)
+			return FALSE;
+	}
+
 	self.attack_state = AS_MISSILE;
 	// attack_finished can't go here, because the attack may still not 
 	// be successful and we shouldn't reset the next attack timer until it is
-	//ai_attack_finished (2 + 2*random());
+	// J_D: unless this is a Magma Hurler
+	if (self.classname == "monster_magma_hurler")
+		ai_attack_finished (2 + 2*random());
 	return TRUE;
 }
 
@@ -424,7 +546,10 @@ void() sham_die =
 // check for gib
 	if (self.health < -60)
 	{
-		Gib ("progs/h_shams.mdl", self.health);
+		if (self.classname == "monster_magma_hurler")
+			Gib ("progs/h_magmh.mdl", self.health);
+		else
+			Gib ("progs/h_shams.mdl", self.health);
 		return;
 	}
 
@@ -439,12 +564,15 @@ void() sham_die =
 void() monster_shambler_spawn =
 {
 	self.classname = "monster_shambler";
+	self.type = "shamblerkin";
 		
 	self.solid = SOLID_SLIDEBOX;
 	//self.movetype = MOVETYPE_STEP;
 	setmodel (self, "progs/shambler.mdl");
 
 	setsize (self, VEC_HULL2_MIN, VEC_HULL2_MAX);
+	if (!self.health)
+	self.health = 600;
 
 	self.th_stand = sham_stand1;
 	self.th_walk = sham_walk1;
@@ -477,12 +605,19 @@ Flags:
 "Instawake" spawn angry at activator
 
 Keys:
+"health" adjusted health amount
 "target" entity to trigger when killed
 "targetname" entity name
 "movedir" set to a velocity to make the monster jump on awakening
+"no_infight" if set to 1 (or higher), this individual won't infight ever (doesn't provoke and isn't provoked)
 */
 /*FGD
-@PointClass base(Monster) size(-32 -32 -24, 32 32 64) model({ "path": ":progs/shambler.mdl" }) = monster_shambler : "Shambler" []
+@PointClass base(Monster) size(-32 -32 -24, 32 32 64) model({ "path": ":progs/shambler.mdl" }) = monster_shambler : "Shambler
+
+Default health = 600"
+[
+health(integer) : "Custom health amount"
+]
 */
 void() monster_shambler =
 {
@@ -508,6 +643,7 @@ void() monster_shambler =
 	precache_sound ("shambler/melee2.wav");
 	precache_sound ("shambler/smack.wav");
 
+	if (!self.health)
 	self.health = 600;
 	setsize (self, VEC_HULL2_MIN, VEC_HULL2_MAX);
 
@@ -515,4 +651,100 @@ void() monster_shambler =
 	
 	addmonster(1);
 	monster_shambler_spawn();
+}
+
+
+
+// J_D: The Magma Hurler
+
+void() monster_magma_hurler_spawn =
+{
+	self.classname = "monster_magma_hurler";
+	self.type = "shamblerkin";
+	self.noselfbomb = 1;
+		
+	self.solid = SOLID_SLIDEBOX;
+	//self.movetype = MOVETYPE_STEP;
+	setmodel (self, "progs/magmhurl.mdl");
+
+	setsize (self, VEC_HULL2_MIN, VEC_HULL2_MAX);
+	if (!self.health)
+	self.health = 1400;
+
+	self.th_stand = sham_stand1;
+	self.th_walk = sham_walk1;
+	self.th_run = sham_run1;
+	self.th_die = sham_die;
+	self.th_melee = sham_melee2;
+	self.th_missile = sham_proj1;
+	self.th_pain = sham_pain;
+	self.th_checkattack = ShamCheckAttack;
+
+	if (self.deathtype == string_null)
+		self.deathtype = "was obliterated by a Magma Hurler";
+
+	nmspeed(0.08);
+
+	walkmonster_start();	
+}
+
+void() monster_magma_hurler_spawner = {mon_spawner_use(monster_magma_hurler_spawn);}
+
+/*QUAKED monster_magma_hurler (1 0 0) (-32 -32 -24) (32 32 64) AMBUSH ? ? ? TRIGGERED NOTFOG NOTELEFRAG INSTAWAKE
+Magma Hurler, 1400 health points.  Rockets and lava only deal half damage to it.
+
+Flags:
+"ambush" only wake up on seeing the player, not another monster getting angry
+
+"Triggered"	will not spawn until triggered - triggering again will wake him up. Set 'count' to make this a multi-use spawner.
+"NoTfog" 	supress teleport glitter when spawned with 'triggered'
+"NoTelefrag" will silently fail to spawn if doing so would telefrag an existing monster. will try again automatically 2x/second until it succeeds.
+"Instawake" spawn angry at activator
+
+Keys:
+"health" adjusted health amount
+"target" entity to trigger when killed
+"targetname" entity name
+"movedir" set to a velocity to make the monster jump on awakening
+"no_infight" if set to 1 (or higher), this individual won't infight ever (doesn't provoke and isn't provoked)
+*/
+/*FGD
+@PointClass base(Monster) size(-32 -32 -24, 32 32 64) model({ "path": ":progs/magmhurl.mdl" }) = monster_magma_hurler : "Magma Hurler
+
+Default health = 1400"
+[
+health(integer) : "Custom health amount"
+]
+*/
+void() monster_magma_hurler =
+{
+	if (!SUB_ShouldSpawn()) return;
+	if (nomonster()) return;
+	if (deathmatch)
+	{
+		remove(self);
+		return;
+	}
+	precache_model ("progs/magmhurl.mdl");
+	precache_model ("progs/h_magmh.mdl");
+	precache_model ("progs/lavaball.mdl");
+	
+	precache_sound ("shambler/sattck1.wav");
+	precache_sound ("boss1/throw.wav");
+	precache_sound ("shambler/sdeath.wav");
+	precache_sound ("shambler/shurt2.wav");
+	precache_sound ("shambler/sidle.wav");
+	precache_sound ("shambler/ssight.wav");
+	precache_sound ("shambler/melee1.wav");
+	precache_sound ("shambler/melee2.wav");
+	precache_sound ("shambler/smack.wav");
+
+	if (!self.health)
+	self.health = 1400;
+	setsize (self, VEC_HULL2_MIN, VEC_HULL2_MAX);
+
+	if ( monster_spawnsetup( monster_magma_hurler_spawner ) ) return;
+	
+	addmonster(1);
+	monster_magma_hurler_spawn();
 }

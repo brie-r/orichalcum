@@ -97,7 +97,7 @@ void()	knight_runatk1	=[	$runattack1,		knight_runatk2	]
 		sound (self, CHAN_WEAPON, "knight/sword2.wav", 1, ATTN_NORM);
 	else
 		sound (self, CHAN_WEAPON, "knight/sword1.wav", 1, ATTN_NORM);
-		
+
 	nmfast();
 	ai_charge(20);
 }
@@ -248,6 +248,7 @@ void() monster_knight_spawn =
 	setmodel (self, "progs/knight.mdl");
 
 	setsize (self, '-16 -16 -24', '16 16 40');
+	if (!self.health)
 	self.health = 72;
 	
 	self.customflags |= CFL_MELEEONLY;
@@ -282,12 +283,19 @@ Flags:
 "Instawake" spawn angry at activator
 
 Keys:
+"health" adjusted health amount
 "target" entity to trigger when killed
 "targetname" entity name
 "movedir" set to a velocity to make the monster jump on awakening
+"no_infight" if set to 1 (or higher), this individual won't infight ever (doesn't provoke and isn't provoked)
 */
 /*FGD
-@PointClass base(Monster) size(-16 -16 -24, 16 16 40) model({ "path": ":progs/knight.mdl" }) = monster_knight : "Knight" []
+@PointClass base(Monster) size(-16 -16 -24, 16 16 40) model({ "path": ":progs/knight.mdl" }) = monster_knight : "Knight
+
+Default health = 72"
+[
+health(integer) : "Custom health amount"
+]
 */
 void() monster_knight =
 {
@@ -307,6 +315,7 @@ void() monster_knight =
 	precache_sound ("knight/sword2.wav");
 	precache_sound ("knight/idle.wav");
 
+	if (!self.health)
 	self.health = 72;
 	setsize (self, '-16 -16 -24', '16 16 40');
 

@@ -4,6 +4,7 @@
 
 defs.qc
 constants.qc
+cvars.qc
 
 maths.qc
 utility.qc
@@ -53,6 +54,8 @@ fog.qc			// atmosfear
 t_void.qc		// bottomless pits
 fx.qc			// more dots
 
+box.qc  // for monster teleportation, from Drake
+
 // prefixed all these so I can more easily open all the monster files at once
 m_ogre.qc
 m_demon.qc
@@ -70,5 +73,14 @@ m_fish.qc		// registered
 m_shalrath.qc	// registered
 m_enforcer.qc	// registered
 m_oldone.qc		// registered
+
+m_wrath.qc  // from DoE
+m_zalarax.qc  // based on DoE's Overlord
+m_abmage.qc  // Aberrant Mage
+m_skullwiz.qc  // Skull Wizards
+m_spider.qc  // Dire Spider
+m_drone.qc  // Drone
+
+rubicon2.qc //selections from Rubicon2 QC, from progs_dump
 
 test.qc

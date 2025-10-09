@@ -247,6 +247,82 @@ vector(vector source, float misvel) LeadTargetBySkill =
 
 
 /*
+========
+path_angry
+
+based on Alkaline's
+========
+*/
+void() path_angry_touch = {
+	if (other.goalentity != self.owner)
+		return;		// not running towards this
+
+	dprint2(other.classname, ": Touched path_angry... ");
+
+	//eprint(self);
+	entity next, first;
+
+	if (self.owner.target != string_null) {
+
+		first = next = findunlocked(world, targetname, self.owner.target);
+
+		other.goalentity = next;
+		dprint("Moving to next!\n");
+	}
+	else if (!next) {
+		other.goalentity = other.enemy;
+		other.oldenemy = world;
+		other.followingpath = FALSE;
+		dprint("Path ended! \n");
+	}
+}
+
+/*QUAKED path_angry (0.5 0.3 0) (-8 -8 -8) (8 8 8)
+Waypoint for angry monsters.
+When angered, the monster will try to follow this path until the end, when it returns to its normal attacking state.
+
+Keys:
+"targetname" must be present.  The name of this waypoint.
+"target" the next spot to move to.  If not present, stop here for good.
+*/
+/*FGD
+@PointClass base(Appearflags, Targetname) color(192 32 0) size(16 16 16) = path_angry :
+"Waypoint for angry monsters.
+When angered, the monster will try to follow this path until the end, when it returns to its normal attacking state.
+"
+[
+	target(target_destination) : "Next waypoint target"
+]
+*/
+void() path_angry = {
+	if (!SUB_ShouldSpawn()) return;
+	
+	if (self.targetname == string_null)
+	{
+		dprint3("path_angry with no targetname at ", vtos(self.origin), "\n");
+		remove(self);
+		return;
+	}
+
+	entity trg;
+
+	// if monsters have their enemy field set they'll never touch their goalentity (why??)
+	// so we create a trigger field around it 
+	trg = spawn();
+
+	trg.solid = SOLID_TRIGGER;
+	trg.touch = path_angry_touch;
+	trg.owner = self;
+	trg.classname = "path_angry_trigger";
+	self.owner = trg;
+	setorigin(trg, self.origin);
+	//setsize (self, '-8 -8 -8', '8 8 8');
+	setsize (trg, '-24 -24 -24', '24 24 24');
+}
+
+
+
+/*
 ==============================================================================
 
 ATTACK CHECKS
@@ -509,6 +585,8 @@ float() CheckAttack =
 	else if (enemy_range >= RANGE_FAR)
 		chance = 0;
 
+	if (self.goalentity.classname == "path_angry" && !(self.flags & (FL_FLY|FL_SWIM))) chance = chance * 0.2;
+
 	if (random() < chance)
 	{
 		self.attack_state = AS_MISSILE;
@@ -529,7 +607,26 @@ WAKING UP
 */
 void() HuntTarget =
 {
-	self.goalentity = self.enemy;
+	if (self.startpath && self.startpath.classname == "path_angry") {
+		if (self.flags & (FL_FLY|FL_SWIM)) {
+			// todo
+			dprint4(self.classname, " (", vtos(self.origin), "): path_angry doesn't work with fly/swimmonsters\n");
+			self.goalentity = self.enemy;
+			self.startpath = world;
+		}
+		else {
+			dprint("Found path_angry, following\n");
+			self.followingpath = TRUE;
+			self.goalentity = self.startpath;
+			self.oldenemy = self.enemy;
+			self.startpath = world; // started following path, so don't do this again
+		}
+	}
+	else {
+		//dprint("path_angry not found\n");
+		self.goalentity = self.enemy;
+	}
+
 	self.ideal_yaw = enemy_yaw();
 	self.think = self.th_run;
 	self.nextthink = time + 0.05;
@@ -547,25 +644,25 @@ void() HuntTarget =
 
 void() SightSound =
 {
-	if (self.classname == "monster_ogre" )	
+	if (self.type == "ogre")
 		sound (self, CHAN_VOICE, "ogre/ogwake.wav", 1, ATTN_NORM);
 	else if (self.classname == "monster_knight" || self.classname == "monster_axegrunt")
 		sound (self, CHAN_VOICE, "knight/ksight.wav", 1, ATTN_NORM);
-	else if (self.classname == "monster_shambler")
+	else if (self.type == "shamblerkin")
 		sound (self, CHAN_VOICE, "shambler/ssight.wav", 1, ATTN_NORM);
 	else if (self.classname == "monster_demon1")
 		sound (self, CHAN_VOICE, "demon/sight2.wav", 1, ATTN_NORM);
-	else if (self.classname == "monster_wizard")
+	else if (self.type == "scrag")
 		sound (self, CHAN_VOICE, "wizard/wsight.wav", 1, ATTN_NORM);
 	else if (self.classname == "monster_zombie")
 		sound (self, CHAN_VOICE, "zombie/z_idle.wav", 1, ATTN_NORM);
 	else if (self.classname == "monster_dog")
 		sound (self, CHAN_VOICE, "dog/dsight.wav", 1, ATTN_NORM);
-	else if (self.classname == "monster_hell_knight" )
+	else if (self.type == "brigade")
 		sound (self, CHAN_VOICE, "hknight/sight1.wav", 1, ATTN_NORM);
 	else if (self.classname == "monster_tarbaby")
 		sound (self, CHAN_VOICE, "blob/sight1.wav", 1, ATTN_NORM);
-	else if (self.classname == "monster_enforcer")
+	else if (self.classname == "monster_enforcer" || self.classname == "monster_commando")
 	{
 		local float	rsnd;
 		rsnd = random();
@@ -578,10 +675,26 @@ void() SightSound =
 		else
 			sound (self, CHAN_VOICE, "enforcer/sight4.wav", 1, ATTN_NORM);
 	}
-	else if (self.classname == "monster_army")
+	else if (self.classname == "monster_army" || self.classname == "monster_nailgunner" || 
+		self.classname == "monster_rocketeer")
 		sound (self, CHAN_VOICE, "soldier/sight1.wav", 1, ATTN_NORM);
 	else if (self.classname == "monster_shalrath")
 		sound (self, CHAN_VOICE, "shalrath/sight.wav", 1, ATTN_NORM);
+	else if (self.type == "wrathkin")
+		sound (self, CHAN_VOICE, "wrath/wsee.wav", 1, ATTN_NORM);
+	else if (self.classname == "monster_aberrant_mage")
+	{
+		if (random() < 0.5)
+			sound (self, CHAN_VOICE, "ab_mage/tsight1.wav", 1, ATTN_NORM);
+		else
+			sound (self, CHAN_VOICE, "ab_mage/tsight2.wav", 1, ATTN_NORM);
+	}
+	else if (self.type == "skullwiz")
+		sound (self, CHAN_VOICE, "skullwiz/gatespk.wav", 1, ATTN_NORM);
+	else if (self.classname == "monster_spider")
+		sound (self, CHAN_VOICE, "spider/hiss1.wav", 1, ATTN_NORM);
+	else if (self.classname == "monster_drone")
+		sound (self, CHAN_VOICE, "drone/drnwake.wav", 1, ATTN_NORM);
 }
 
 void() FoundTarget =
@@ -948,7 +1061,9 @@ take damage from slime and lava. returns FALSE if monster died from it.
 float() ai_check_liquid =
 {
 	// there are hacked takedamage cthons out there, and they're all in the lava
-	if (self.type == "boss" || self.classname == "monster_rotfish")
+	if (self.type == "boss" || self.classname == "monster_rotfish" || 
+	self.type == "wrathkin" || self.classname == "monster_wizard_lord" || 
+	self.classname == "monster_skull_lord")
 		return TRUE;
 		
 	vector wtt;
@@ -1341,6 +1456,7 @@ void() ai_charge_side =
 =============
 ai_melee
 =============
+J_D: added difference to damage for death brigade elites
 */
 void() ai_melee =
 {
@@ -1351,7 +1467,12 @@ void() ai_melee =
 
 	if (vlen(self.enemy.origin - self.origin) <= 60 || EntitiesTouching(self, self.enemy))
 	{
-		ldmg = 3 + random() * 2; //(random() + random() + random()) * 3;		
+		if (self.classname == "monster_hell_baron")
+			ldmg = 4 + random() * 2;
+		else if (self.classname == "monster_hell_duke")
+			ldmg = 5 + random() * 2;
+		else
+			ldmg = 3 + random() * 2; //(random() + random() + random()) * 3;		
 		T_Damage(self.enemy, self, self, ldmg, DMGTYPE_MELEE);
 	}
 }
@@ -1588,7 +1709,7 @@ void(float dist) ai_run =
 	}
 	
 	// see if the enemy is dead
-	if (!alive(self.enemy))
+	if (!alive(self.enemy) && self.goalentity.classname != "path_angry")
 	{
 		e = self.enemy;
 		self.enemy = world;
@@ -1624,12 +1745,14 @@ void(float dist) ai_run =
 	enemy_range = range(self.enemy);
 
 	// look for other coop players
-	if (coop && self.search_time < time)
+	if (coop && self.search_time < time && self.enemy.classname != "path_angry")
 	{
 		ReprioritizeEnemy();
 		//if (ReprioritizeEnemy ())
 		//	return;
 	}
+
+	if (self.goalentity.classname == "path_angry") self.ideal_yaw = vectoyaw(self.goalentity.origin - self.origin);
 	
 	if (enemy_vis && !(self.enemy.customflags & (CFL_PLUNGE|CFL_LIMBO)))
 	{

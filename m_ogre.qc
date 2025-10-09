@@ -1,3 +1,8 @@
+// J_D: stuff from progs_dump for the flak ogre
+float MONSTER_FLAK_OGRE				= 4;
+float FL_NOSELECT				= 16384; // ignored by entity selector
+.float spikecount;	//bdw - saves up flak hits to do a single damage next frame
+
 /*
 ==============================================================================
 
@@ -36,7 +41,7 @@ $frame pull1 pull2 pull3 pull4 pull5 pull6 pull7 pull8 pull9 pull10 pull11
 
 void() OgreGrenadeExplode =
 {
-	T_RadiusDamage (self, self.trueowner, 40, world);
+	T_RadiusDamage (self, self.trueowner, 40, world, DMGTYPE_EXPLOSION);
 	//sound (self, CHAN_VOICE, "weapons/r_exp3.wav", 1, ATTN_NORM);
 	
 	T_ExplosiveTouch();
@@ -54,6 +59,16 @@ void() OgreGrenadeTouch =
 		if (other.type == "zombie")
 			T_Damage (other, self, self.trueowner, other.health + 25);
 		OgreGrenadeExplode();
+
+		// J_D: Marksmen deal a bit more damage on direct hits against their targets
+		if (self.trueowner.classname == "monster_ogre_marksman" && other == self.trueowner.enemy)
+		{
+			if (skill == 3)
+				T_Damage (other, self, self.trueowner, 8, DMGTYPE_EXPLOSION);
+			else
+				T_Damage (other, self, self.trueowner, 4, DMGTYPE_EXPLOSION);
+		}
+
 		return;
 	}
 
@@ -94,12 +109,15 @@ vector(vector dest, float speed) OgreAimGrenade =
 		theta = clamp(theta, -80, 70);
 	else
 		theta = clamp(theta, -60, 60);
-		
-	if (skill == 3)
-		theta = (theta + theta + 18) / 3; // nightmare: 66% z-awareness
-	else
-		theta = (theta + 18) / 2;	// copper: 50% z-awareness
-		
+
+	if (self.classname == "monster_ogre")
+	{
+		if (skill == 3)
+			theta = (theta + theta + 18) / 3; // nightmare: 66% z-awareness
+		else
+			theta = (theta + 18) / 2;	// copper: 50% z-awareness
+	}
+
 	angs_x = -theta;	
 	makevectors(angs);
 	
@@ -131,12 +149,135 @@ void() OgreFireGrenade =
 }
 
 
+//========
+// J_D: Flak Ogre's attack from progs_dump, modified where appropriate
+
+void() FlakDoDamage =
+{
+	self.origin = self.oldenemy.origin + self.oldorigin;	//get correct gib direction
+	T_Damage(self.oldenemy, self, self.trueowner, self.oldenemy.spikecount);
+	self.oldenemy.spikecount = 0;
+	remove(self);
+}
+
+void() FlakTouch =
+{
+	if (!CheckValidSpikeTouch()) return;
+
+// hit something that bleeds
+	if (other.takedamage)
+	{
+		spawn_touchblood(self.dmg);
+
+		sound(self, CHAN_VOICE, "fish/bite.wav", 1, ATTN_NORM);
+
+		if (other.spikecount)	//not the first one
+		{
+			other.spikecount = other.spikecount + self.dmg;
+			remove(self);
+			return;
+		}
+
+		// the first one...
+
+		other.spikecount = self.dmg;
+
+		// stick around for a little while...
+		self.velocity = '0 0 0';
+		self.solid = SOLID_NOT;
+		self.touch = SUB_Null;
+		self.model = string_null;
+		self.oldorigin = self.origin - other.origin;	//displacement from enemy origin (its gonna move next frame)
+		self.oldenemy = other;
+		self.think = FlakDoDamage;
+		self.nextthink = time + 0.05;
+		return;
+	}
+
+	WriteByte (MSG_BROADCAST, SVC_TEMPENTITY);
+	WriteByte (MSG_BROADCAST, TE_SUPERSPIKE);
+	WriteCoord (MSG_BROADCAST, self.origin_x);
+	WriteCoord (MSG_BROADCAST, self.origin_y);
+	WriteCoord (MSG_BROADCAST, self.origin_z);
+
+	if (self.spawnflags & MONSTER_FLAK_OGRE)	//bit of a hack
+	{
+		remove(self);
+		return;
+	}
+
+	self.dmg = self.dmg - 5;	//gets weaker with each bounce. also stops them getting stuck in world.
+	if (self.dmg <= 0)
+	{
+		remove(self);
+		return;
+	}
+	self.velocity = self.velocity * 0.5;	//reduce crazy ricochets
+	self.movetype = MOVETYPE_BOUNCE;
+}
+
+void() BDW_OgreFireFlak =
+{
+	local float flakcount;
+	local vector dir, ang;
+	local entity flak;
+
+	flakcount = 8;
+
+	self.effects = self.effects | EF_MUZZLEFLASH;
+	sound(self, CHAN_WEAPON, "weapons/spike2.wav", 1, ATTN_NORM);
+
+// make angles out of the current displacement vector...
+	ang = vectoangles(enemy_vispos() - self.origin + enemy_aim_vertical());
+// then get the required components...
+	makevectors(ang);
+
+	while (flakcount > 0)
+	{
+	//tighter spread...
+		dir = v_forward*10 + crandom()*v_right + crandom()*v_up;
+		dir = normalize(dir);
+	// f*cking hack...is this a v_forward problem?
+		dir_z = dir_z * -1;
+		//dir = dir*1000;
+		//dir = dir*800;
+
+
+		flak = spawn();
+
+		flak.owner = flak.trueowner = self;
+		//flymissile is a bit too all-seeing for this gun...
+		flak.movetype = MOVETYPE_FLY;
+		flak.solid = SOLID_BBOX;
+		flak.flags = FL_NOSELECT;
+		flak.touch = FlakTouch;
+		flak.angles = vectoangles(dir);
+		flak.velocity = dir * 800;
+		flak.nextthink = time + 6;
+		flak.think = SUB_Remove;
+		flak.dmg = 4;
+
+		flak.spawnflags = MONSTER_FLAK_OGRE;	//this is a hack to tell FlakTouch that it came from an ogre
+		setmodel(flak, "progs/spike.mdl");
+
+		setsize(flak, '0 0 0', '0 0 0');
+		setorigin(flak, self.origin + '0 0 16');
+
+		flakcount = flakcount - 1;
+	}
+}
+
+
 
 void() ogre_dropammo =
 {
-	// reduced grenade drops from ogres
-	// don't want to have to keep soaking them up with pointless zombie squads early on
-	self.ammo_rockets = 1;
+	if (self.classname == "monster_ogre_flak")  // flak ogres drop nails instead
+		self.ammo_nails = 5;
+	else
+		// reduced grenade drops from ogres
+		// don't want to have to keep soaking them up with pointless zombie squads early on
+		self.ammo_rockets = 1;
+
 	DropBackpack();
 }
 
@@ -272,7 +413,11 @@ void() ogre_smash14	=[	$smash14,		ogre_run1	] {ai_charge(12);}
 void() ogre_nail1	=[	$shoot1,		ogre_nail2	] {ai_face();}
 void() ogre_nail2	=[	$shoot2,		ogre_nail3	] {ai_face();}
 void() ogre_nail3	=[	$shoot2,		ogre_nail4	] {ai_face();}
-void() ogre_nail4	=[	$shoot3,		ogre_nail5	] {ai_face(); OgreFireGrenade();}
+void() ogre_nail4	=[	$shoot3,		ogre_nail5	] {ai_face();
+	if (self.classname == "monster_ogre_flak")
+		BDW_OgreFireFlak();
+	else
+		OgreFireGrenade();}
 void() ogre_nail5	=[	$shoot4,		ogre_nail6	] {ai_face(); ai_check_refire(ogre_nail6l);}
 void() ogre_nail6	=[	$shoot5,		ogre_nail7	] {ai_face();}
 void() ogre_nail7	=[	$shoot6,		ogre_run1	] {
@@ -325,6 +470,9 @@ float() OgreCheckAttack =
 
 	if (enemy_range == RANGE_TOOFAR || enemy_range == RANGE_FAR)
 		return FALSE;	// too far for grenades
+
+	if (self.goalentity.classname == "path_angry" && random() > 0.07)
+		return FALSE;
 
 	self.attack_state = AS_MISSILE;
 	return TRUE;
@@ -389,7 +537,13 @@ void(entity attacker, float damage)	ogre_pain =
 	// don't make multiple pain sounds right after each other
 	if (self.pain_finished > time)
 		return;
-		
+
+	if (self.classname == "monster_ogre_marksman")
+	{
+		if (random()*30 > damage)
+			return;		// J_D: the marksman didn't flinch
+	}
+
 	sound (self, CHAN_VOICE, "ogre/ogpain1.wav", 1, ATTN_NORM);		
 	r = random();
 	if (skill == 3)
@@ -476,6 +630,7 @@ void() monster_ogre_spawn =
 {
 	self.classname = "monster_ogre";
 	self.type = "ogre";
+	self.noselfbomb = 1;
 	
 	self.solid = SOLID_SLIDEBOX;
 	//self.movetype = MOVETYPE_STEP;
@@ -483,6 +638,7 @@ void() monster_ogre_spawn =
 	setmodel (self, "progs/ogre.mdl");
 
 	setsize (self, VEC_HULL2_MIN, '32 32 40');
+	if (!self.health)
 	self.health = 200;
 
 	self.th_stand = ogre_stand1;
@@ -514,12 +670,19 @@ Flags:
 "Instawake" spawn angry at activator
 
 Keys:
+"health" adjusted health amount
 "target" entity to trigger when killed
 "targetname" entity name
 "movedir" set to a velocity to make the monster jump on awakening
+"no_infight" if set to 1 (or higher), this individual won't infight ever (doesn't provoke and isn't provoked)
 */
 /*FGD
-@PointClass base(Monster) size(-32 -32 -24, 32 32 64) model({ "path": ":progs/ogre.mdl" }) = monster_ogre : "Ogre" []
+@PointClass base(Monster) size(-32 -32 -24, 32 32 64) model({ "path": ":progs/ogre.mdl" }) = monster_ogre : "Ogre
+
+Default health = 200"
+[
+health(integer) : "Custom health amount"
+]
 */
 void() monster_ogre =
 {
@@ -543,6 +706,7 @@ void() monster_ogre =
 	precache_sound ("ogre/ogsawatk.wav");
 	precache_sound ("ogre/ogwake.wav");
 	
+	if (!self.health)
 	self.health = 200;
 	setsize (self, VEC_HULL2_MIN, '32 32 40');
 	if ( monster_spawnsetup( monster_ogre_spawner ) ) return;
@@ -551,8 +715,188 @@ void() monster_ogre =
 	monster_ogre_spawn();
 }
 
-void() monster_ogre_marksman =
+
+
+// J_D: The Ogre Marksman
+
+void() monster_ogre_marksman_spawn =
 {
-	monster_ogre ();
+	self.classname = "monster_ogre_marksman";
+	self.type = "ogre";
+	self.noselfbomb = 1;
+	
+	self.solid = SOLID_SLIDEBOX;
+	//self.movetype = MOVETYPE_STEP;
+
+	setmodel (self, "progs/ogre_m.mdl");
+
+	setsize (self, VEC_HULL2_MIN, '32 32 40');
+	if (!self.health)
+	self.health = 230;
+
+	self.th_stand = ogre_stand1;
+	self.th_walk = ogre_walk1;
+	self.th_run = ogre_run1;
+	self.th_die = ogre_die;
+	self.th_melee = ogre_melee;
+	self.th_missile = ogre_nail1;
+	self.th_pain = ogre_pain;
+	self.th_checkattack = OgreCheckAttack;
+
+	if (self.deathtype == string_null)
+		self.deathtype = "was terminated by an Ogre Marksman";
+
+	walkmonster_start();
 }
 
+void() monster_ogre_marksman_spawner = {mon_spawner_use(monster_ogre_marksman_spawn);}
+
+/*QUAKED monster_ogre_marksman (1 0 0) (-32 -32 -24) (32 32 40) AMBUSH ? ? ? TRIGGERED NOTFOG NOTELEFRAG INSTAWAKE
+Ogre Marksman, 230 health points.
+
+Flags:
+"ambush" only wake up on seeing the player, not another monster getting angry
+
+"Triggered"	will not spawn until triggered - triggering again will wake him up. Set 'count' to make this a multi-use spawner.
+"NoTfog" 	supress teleport glitter when spawned with 'triggered'
+"NoTelefrag" will silently fail to spawn if doing so would telefrag an existing monster. will try again automatically 2x/second until it succeeds.
+"Instawake" spawn angry at activator
+
+Keys:
+"health" adjusted health amount
+"target" entity to trigger when killed
+"targetname" entity name
+"movedir" set to a velocity to make the monster jump on awakening
+"no_infight" if set to 1 (or higher), this individual won't infight ever (doesn't provoke and isn't provoked)
+*/
+/*FGD
+@PointClass base(Monster) size(-32 -32 -24, 32 32 64) model({ "path": ":progs/ogre_m.mdl" }) = monster_ogre_marksman : "Ogre Marksman
+
+Default health = 230"
+[
+health(integer) : "Custom health amount"
+]
+*/
+void() monster_ogre_marksman =
+{
+	if (!SUB_ShouldSpawn()) return;
+	if (nomonster()) return;
+	if (deathmatch)
+	{
+		remove(self);
+		return;
+	}
+
+	precache_model ("progs/ogre_m.mdl");
+	precache_model ("progs/h_ogre.mdl");
+	precache_model ("progs/grenade.mdl");
+
+	precache_sound ("ogre/ogdrag.wav");
+	precache_sound ("ogre/ogdth.wav");
+	precache_sound ("ogre/ogidle.wav");
+	precache_sound ("ogre/ogidle2.wav");
+	precache_sound ("ogre/ogpain1.wav");
+	precache_sound ("ogre/ogsawatk.wav");
+	precache_sound ("ogre/ogwake.wav");
+
+	if (!self.health)
+	self.health = 230;
+	setsize (self, VEC_HULL2_MIN, '32 32 40');
+	if ( monster_spawnsetup( monster_ogre_marksman_spawner ) ) return;
+	
+	addmonster(1);
+	monster_ogre_marksman_spawn();
+}
+
+
+
+// J_D: The Flak Ogre
+
+void() monster_ogre_flak_spawn =
+{
+	self.classname = "monster_ogre_flak";
+	self.type = "ogre";
+	
+	self.solid = SOLID_SLIDEBOX;
+	//self.movetype = MOVETYPE_STEP;
+
+	setmodel (self, "progs/ogre_f.mdl");
+
+	setsize (self, VEC_HULL2_MIN, '32 32 40');
+	if (!self.health)
+	self.health = 200;
+
+	self.th_stand = ogre_stand1;
+	self.th_walk = ogre_walk1;
+	self.th_run = ogre_run1;
+	self.th_die = ogre_die;
+	self.th_melee = ogre_melee;
+	self.th_missile = ogre_nail1;
+	self.th_pain = ogre_pain;
+	self.th_checkattack = OgreCheckAttack;
+
+	if (self.deathtype == string_null)
+		self.deathtype = "was nailed by a Flak Ogre";
+
+	walkmonster_start();
+}
+
+void() monster_ogre_flak_spawner = {mon_spawner_use(monster_ogre_flak_spawn);}
+
+/*QUAKED monster_ogre_flak (1 0 0) (-32 -32 -24) (32 32 40) AMBUSH ? ? ? TRIGGERED NOTFOG NOTELEFRAG INSTAWAKE
+Flak Ogre, 200 health points.
+
+Flags:
+"ambush" only wake up on seeing the player, not another monster getting angry
+
+"Triggered"	will not spawn until triggered - triggering again will wake him up. Set 'count' to make this a multi-use spawner.
+"NoTfog" 	supress teleport glitter when spawned with 'triggered'
+"NoTelefrag" will silently fail to spawn if doing so would telefrag an existing monster. will try again automatically 2x/second until it succeeds.
+"Instawake" spawn angry at activator
+
+Keys:
+"health" adjusted health amount
+"target" entity to trigger when killed
+"targetname" entity name
+"movedir" set to a velocity to make the monster jump on awakening
+"no_infight" if set to 1 (or higher), this individual won't infight ever (doesn't provoke and isn't provoked)
+*/
+/*FGD
+@PointClass base(Monster) size(-32 -32 -24, 32 32 64) model({ "path": ":progs/ogre_f.mdl" }) = monster_ogre_flak : "Flak Ogre
+
+Default health = 200"
+[
+health(integer) : "Custom health amount"
+]
+*/
+void() monster_ogre_flak =
+{
+	if (!SUB_ShouldSpawn()) return;
+	if (nomonster()) return;
+	if (deathmatch)
+	{
+		remove(self);
+		return;
+	}
+
+	precache_model ("progs/ogre_f.mdl");
+	precache_model ("progs/h_ogre.mdl");
+	precache_model ("progs/spike.mdl");
+
+	precache_sound ("ogre/ogdrag.wav");
+	precache_sound ("ogre/ogdth.wav");
+	precache_sound ("ogre/ogidle.wav");
+	precache_sound ("ogre/ogidle2.wav");
+	precache_sound ("ogre/ogpain1.wav");
+	precache_sound ("ogre/ogsawatk.wav");
+	precache_sound ("ogre/ogwake.wav");
+	precache_sound ("fish/bite.wav");
+
+	if (!self.health)
+	self.health = 200;
+	setsize (self, VEC_HULL2_MIN, '32 32 40');
+	if ( monster_spawnsetup( monster_ogre_flak_spawner ) ) return;
+	
+	addmonster(1);
+	monster_ogre_flak_spawn();
+}

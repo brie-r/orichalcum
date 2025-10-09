@@ -826,6 +826,147 @@ void() target_multiprint =
 }
 
 
+/*
+=============================================================
+
+target_textstory
+
+=============================================================
+*/
+
+float TEXTSTORY_SILENT = 1;
+float TEXTSTORY_SHOW_TO_ALL = 2;
+
+void(entity controller) textstory_hide = {
+	if (!self.enemy || !(self.enemy.flags & FL_CLIENT)) return;
+
+	self.enemy.suppressCenterPrint = FALSE;
+	centerprint(self.enemy, "");
+
+	if (controller.noise2)
+		sound(self.enemy, CHAN_BODY, controller.noise2, 1, ATTN_NORM);
+
+}
+
+void(entity controller) textstory_show = {
+	if (!self.enemy || !(self.enemy.flags & FL_CLIENT)) return;
+
+	self.enemy.suppressCenterPrint = TRUE;
+
+	centerprint_builtin(self.enemy, controller.message);
+
+	if (!self.state) {
+		if (controller.noise1)
+			sound(self.enemy, CHAN_BODY, controller.noise1, 1, ATTN_NORM);
+	}
+
+	self.state = 1;
+}
+
+void() target_textstory_helper_hide = {
+
+	textstory_hide(self.owner);
+	remove(self);
+}
+
+void() target_textstory_helper_show = {
+	if (!self.enemy || !(self.enemy.flags & FL_CLIENT)) {
+		remove(self);
+		return;
+	}
+
+	textstory_show(self.owner);
+
+	if (self.attack_finished < time) self.think = target_textstory_helper_hide;
+
+	self.nextthink = time + 0.1;
+}
+
+void(entity tgt) target_textstory_spawn_helper = {
+	entity e;
+
+	e = spawn();
+	e.classname = "target_textstory_helper";
+	e.owner = self;
+	e.think = target_textstory_helper_show;
+	e.nextthink = time + 0.1;
+	e.attack_finished = time + self.wait;
+	e.enemy = tgt;
+}
+
+void() target_textstory_use = {
+
+	if (!(activator.flags & FL_CLIENT)) return;
+
+	entity t;
+
+	if (self.spawnflags & TEXTSTORY_SHOW_TO_ALL) {
+		t = find(world, classname, "player");
+		while (t) {
+			target_textstory_spawn_helper(t);
+			t = find(t, classname, "player");
+		}
+	}
+	else
+		target_textstory_spawn_helper(activator);
+}
+
+/*QUAKED target_textstory (.5 .5 .5) (-8 -8 -8) (8 8 8) SILENT SHOW_TO_ALL
+This entity will print potentially long centerprint text when triggered. The message remains on screen for the duration of 'wait'.
+Plays the beep sound when triggered unless a different sound file is indicated in 'noise1' or the Silent spawnflag is used. Unless Silent is used, it plays 'noise2' at the end if a sound file is indicated there.
+Horizontal space is limited to 40 characters, so you must place linefeeds (\n) into your text. Don't make the text super-long (close to 256 characters or more) or there can be problems.
+
+"wait" message duration
+"message" message to show
+"noise1" sound that plays on activation if SILENT is not used
+"noise2" sound that plays on deactivation if SILENT is not used
+
+Spawnflags
+SILENT doesn't make a sound
+SHOW_TO_ALL shows the message to all players instead of only the activator (in multiplayer)
+*/
+/*FGD
+@PointClass color(128 128 128) size(16 16 16) base(Appearflags, Targetname) = target_textstory :
+"This entity will print potentially long centerprint text when triggered. The message remains on screen for the duration of 'wait'.
+Plays the beep sound when triggered unless a different sound file is indicated in 'noise1' or the Silent spawnflag is used. Unless Silent is used, it plays 'noise2' at the end if a sound file is indicated there.
+Horizontal space is limited to 40 characters, so you must place linefeeds (\n) into your text. Don't make the text super-long (close to 256 characters or more) or there can be problems."
+[
+	spawnflags(flags) = [
+		1: "Silent" : 0
+		2: "Message to all players" : 0
+	]
+	wait(integer) : "Message duration" : 5
+	message(string) : "Message"
+	noise1(string) : "Activation sound" : "misc/talk.wav"
+	noise2(string) : "Deactivation sound"
+]
+*/
+void() target_textstory = {
+	if (!SUB_ShouldSpawn()) return;
+
+	if (self.noise1 == "")
+		self.noise1 = "misc/talk.wav";
+
+	if (self.noise2 == "")
+		self.noise2 = "misc/null.wav";
+
+	if (self.spawnflags & TEXTSTORY_SILENT) {
+		self.noise1 = "";
+		self.noise2 = "";
+	}
+
+	if (self.noise1 != "")
+		precache_sound (self.noise1);
+	if (self.noise2 != "")
+		precache_sound (self.noise2);
+
+	if (!self.wait)
+		self.wait = 5;
+
+	self.use = target_textstory_use;
+}
+
+
 
 /*~>~<~>~<~>~<~>~<~>~<~>~<~>~<~>~<~>~<~>~<~>~<~>~<~>~<~>~<~>~<~>~<~>~<~>
 ~>~<~>~<~>~<~>~<~>~<~>~<~>~<~>~<~>~<~>~<~>~<~>~<~>~<~>~<~>~<~>~<~>~<~>~*/

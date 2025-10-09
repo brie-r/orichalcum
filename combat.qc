@@ -285,7 +285,7 @@ float ArmorSave(entity targ, float damage, float dmgtype = 0)
 		return 0;
 
 	float save, savefrac;
-	
+
 	savefrac = targ.armortype * damage;
 
 	if (targ.classname == "player")
@@ -366,6 +366,9 @@ void( entity attacker ) T_ReactToDamage =
 	
 	// fish should ignore monsters that aren't in the water with them
 	if (self.flags & FL_SWIM && pointcontents(attacker.origin) > CONTENT_WATER) return;
+
+	// J_D: when the no_infight key is used
+	if (self.no_infight >= 1 || attacker.no_infight >= 1) return;
 	
 	// get mad unless of the same class (except for soldiers)
 	// classname check replaced with new "type" check
@@ -393,86 +396,54 @@ even if the target resisted the damage
 */
 void(entity targ, entity inflictor, entity attacker, float damage, float dmgtype = 0) T_Damage =
 {
-	T_DamageApply(targ, inflictor, attacker, damage, dmgtype);
-	targ.customflags = not(targ.customflags, CFL_AXEHITME | CFL_ZAPPED);
-}
-
-void(entity targ, entity inflictor, entity attacker, float damage, float dmgtype = 0) T_DamageApply =
-{
-	vector	dir;
-	entity	oldself;
-	float	save, take;
-
+	float final_damage;
+	
 	if (!damage || !targ.takedamage) return;
+
+	//johnfitz -- some func_breakables ignore monster damage //added from Rubicon2 combat.qc dumptruck_ds
+	if (targ.classname == "func_breakable")
+	{
+		if (targ.spawnflags & BREAKABLE_NO_MONSTERS && attacker.flags & FL_MONSTER)
+			return;
+	}
+	//johnfitz
 	
 	if (targ == attacker)
 	{
 		// monsters which shouldn't be able to splash damage themselves to death:
 		if (attacker.type == "boss") return;
-		if (attacker.classname == "monster_ogre" || 
-			attacker.classname == "monster_shalrath")
-			return;
+		// J_D: .noselfbomb used instead of specifying lots of classnames
+		if (attacker.noselfbomb == 1) return;
 	}
 	
-	// used by buttons and triggers to set activator for target firing
+	// set activator for buttons/triggers
 	damage_attacker = attacker;
-
-	if (has_quad(attacker) && !(dmgtype & DMGTYPE_SCRIPT))	// don't let target_items quad-damage you
-	{
-		damage = damage * 4;
-		
-		// silly hacky fix:
-		// knight health was dropped 3hp (75 to 72) so that exactly three shells can kill a knight
-		// the side effect of this was that one quad SNG shot (which does 72 dmg) would exactly kill a knight
-		// when, in vanilla, one would drop the knight to 3hp and the next would gib him
-		// the cleanest way to preserve the 'feel' of this is:
-		if (targ.classname == "monster_knight" && attacker.classname == "player" && inflictor.classname == "spike")
-			damage -= 3;
+	final_damage = T_CalculateModifiedDamage(targ, inflictor, attacker, damage, dmgtype);
+	if (final_damage > 0) {
+		T_MomentumApply(targ, inflictor, damage);
+		T_DamageApply(targ, inflictor, attacker, damage, final_damage);
 	}
 	
-	// variety is the spice of life:
-	// scrags will happily fly down into slime, and they do spit green shit anyway
-	if (targ.classname == "monster_wizard" && (dmgtype & DMGTYPE_SLIME))
-		return;
-	// shamblers take half damage from explosives
-	else if (targ.classname == "monster_shambler" && (dmgtype & DMGTYPE_EXPLOSION))
-		damage = damage * 0.5;
-	// some attacks like vorepods and ogre grenades should explode zombies despite doing <60dmg
-	else if (targ.type == "zombie")
-	{
-		if (dmgtype & DMGTYPE_MELEE)	// always knock a zombie down at least
-			damage = max(damage, 20);
-		else if (dmgtype & (DMGTYPE_ZKILL | DMGTYPE_LAVA))
-			damage = max(damage, targ.health + 25);
-		else if (dmgtype & DMGTYPE_SLIME)
-			return;	// slime damage is not meaningful to zombies, they'll just pain over and over
-	}		
-	
-	if (attacker.classname == targ.classname)
-	{
-		if (attacker.classname != "player" && attacker.classname != "monster_army")
-			damage = damage * 0.5;
-	}
-
-	// .frags used on monsters to count time spent not damaging an enemy, so impossible infights time out
+	// reset monster infight timer (.frags on monsters count time spent not damaging an enemy)
 	if (attacker.flags & FL_MONSTER && attacker.enemy == targ)
-	{
 		attacker.frags = 0;
-	}
+	targ.customflags = not(targ.customflags, CFL_AXEHITME | CFL_ZAPPED);
+}
 
-	// figure momentum add
-	if ( (inflictor != world) && (targ.movetype == MOVETYPE_WALK) )
-	{
-		dir = targ.origin - BoundsCenter(inflictor);
-		dir = normalize(dir);
-		targ.velocity = targ.velocity + dir*damage*8;
+void(entity targ, entity inflictor, entity attacker, float damage, float dmgtype = 0) T_DamageApply =
+{
+	entity	oldself;
+	float	save, take;
+
+	// prevent self-damage while retaining knockback: for the brie mod
+	if (cvar("sv_selfdamage") == 0 && targ == attacker) {
+		return;
 	}
 
 	if (targ.flags & FL_GODMODE)
 		return;
-	
+		
 	// check for artifacts
-	
 	if (has_invuln(targ))
 	{
 		if (targ.invincible_sound < time)
@@ -499,7 +470,8 @@ void(entity targ, entity inflictor, entity attacker, float damage, float dmgtype
 			return;
 	}
 
-	// ready to do the damage
+
+
 	damage = max(1, floor(damage));
 	save = ArmorSave(targ, damage, dmgtype);
 	targ.armorvalue = targ.armorvalue - save;
@@ -534,6 +506,7 @@ void(entity targ, entity inflictor, entity attacker, float damage, float dmgtype
 	// react to the damage
 	oldself = self;
 	self = targ;
+	
 	if ( (self.flags & FL_MONSTER) && attacker != world)
 		T_ReactToDamage( attacker );
 	
@@ -555,6 +528,90 @@ void(entity targ, entity inflictor, entity attacker, float damage, float dmgtype
 	}
 	
 	self = oldself;
+}
+
+float(entity targ, entity inflictor, entity attacker, float damage, float dmgtype) T_CalculateModifiedDamage =
+{
+	if (!damage || !targ.takedamage) return 0;
+
+	//johnfitz -- some func_breakables ignore monster damage //added from Rubicon2 combat.qc dumptruck_ds
+	if (targ.classname == "func_breakable"
+		&& targ.spawnflags & BREAKABLE_NO_MONSTERS
+		&& attacker.flags & FL_MONSTER)
+		return 0;
+	//johnfitz
+	
+	// monsters which shouldn't be able to splash damage themselves to death:
+	// J_D: .noselfbomb used instead of specifying lots of classnames
+	if (targ == attacker && (attacker.type == "boss" || attacker.noselfbomb == 1))
+		return 0;
+	
+	// used by buttons and triggers to set activator for target firing
+	damage_attacker = attacker;
+
+	if (has_quad(attacker) && !(dmgtype & DMGTYPE_SCRIPT))	// don't let target_items quad-damage you
+	{
+		damage = damage * 4;
+	}
+	// knight hp was dropped (75 to 72)
+	// this code prevents a quad SNG (72) from killing knights in one shot
+	if (has_quad(attacker)
+		&& targ.classname == "monster_knight"
+		&& attacker.classname == "player"
+		&& inflictor.classname == "spike"
+		&& targ.max_health == 72 // J_D: added check in case of knights with custom health
+		) {
+		damage -= 3;
+	}
+	
+	// variety is the spice of life:
+	// scrags will happily fly down into slime, and they do spit green shit anyway
+	if ((dmgtype & DMGTYPE_SLIME) &&
+		(targ.classname == "monster_wizard"
+		|| targ.classname == "monster_wizard_specter"
+		|| targ.classname == "monster_aberrant_mage"
+		|| targ.classname == "monster_skull_adept"
+		|| targ.classname == "monster_drone"))
+		return 0;
+	// shamblers take half damage from explosives
+	else if (targ.type == "shamblerkin" && (dmgtype & DMGTYPE_EXPLOSION))
+		damage = damage * 0.5;
+	// J_D: magma hurlers also take half damage from lava
+	else if (targ.classname == "monster_magma_hurler" && (dmgtype & DMGTYPE_LAVA))
+		damage = damage * 0.5;
+	// some attacks like vorepods and ogre grenades should explode zombies despite doing <60dmg
+	else if (targ.type == "zombie")
+	{
+		if (dmgtype & DMGTYPE_MELEE)	// always knock a zombie down at least
+			damage = max(damage, 20);
+		else if (dmgtype & (DMGTYPE_ZKILL | DMGTYPE_LAVA))
+			damage = max(damage, targ.health + 25);
+		else if (dmgtype & DMGTYPE_SLIME)
+			return 0;	// slime damage is not meaningful to zombies, they'll just pain over and over
+	}
+	
+	// J_D: added type to this
+	if ((attacker.classname == targ.classname || attacker.type == targ.type)
+		&& attacker.classname != "player"
+		&& attacker.classname != "monster_army")
+		damage = damage * 0.5;
+	return damage;
+}
+
+/*
+============
+T_MomentumApply
+
+Applies knockback velocity to target based on inflictor's position and precalculated damage
+============
+*/
+void(entity targ, entity inflictor, float damage) T_MomentumApply = {
+	vector	dir;
+	if (inflictor != world || targ.movetype != MOVETYPE_WALK )
+	// 	return;
+	dir = targ.origin - BoundsCenter(inflictor);
+	dir = normalize(dir);
+	targ.velocity = targ.velocity + dir * damage * cvar("sv_knockback");
 }
 
 /*
@@ -600,7 +657,6 @@ void(entity inflictor, entity attacker, float damage, entity ignore, float dmgty
 			//if (head.classname == "monster_shambler" && (dmgtype & DMGTYPE_EXPLOSION))
 			//	points *= 0.5;
 			// already halved by T_Damage
-			
 
 			if (points > 0 && CanDamage ( head, inflictor.origin ) )
 				T_Damage (head, inflictor, attacker, points, dmgtype);

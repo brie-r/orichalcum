@@ -112,7 +112,19 @@ entity(vector org, vector vel) launch_wizspike =
 {
 	entity spike;
 	
-	if (skill == 3)
+	if (self.owner.classname == "monster_wizard_lord" && skill == 3)
+	{
+		spike = launch_projectile(org, vel*800, "wizspike");	// FLYMISSILE
+		spike.dmg = 30;
+		SUB_ChangeModel (spike, "progs/sl_spike.mdl");
+	}
+	else if (self.owner.classname == "monster_wizard_lord")
+	{
+		spike = launch_projectile(org, vel*700, "wizspike");	// FLYMISSILE
+		spike.dmg = 20;
+		SUB_ChangeModel (spike, "progs/sl_spike.mdl");
+	}
+	else if (skill == 3)
 	{
 		spike = launch_projectile(org, vel*720, "wizspike");	// FLYMISSILE
 		spike.dmg = 20;
@@ -288,7 +300,7 @@ void()	wiz_fast7	=[	$magatt7,		wiz_fast8	] {ai_face();}
 void()	wiz_fast8	=[	$magatt8,		wiz_fast9	] {ai_face();}
 void()	wiz_fast9	=[	$magatt10,		wiz_fast10	] {ai_face();}
 void()	wiz_fast10	=[	$magatt12,		wiz_run1	] {ai_face();
-	if (skill == 3)
+	if (self.classname == "monster_wizard_lord" || skill == 3)
 		ai_attack_finished(3 * random()); 
 	else
 		ai_attack_finished(1.5 + random()); 
@@ -319,10 +331,24 @@ void()	wiz_death8	=[	$death8,		SUB_Null	] {}// deathvoidcheck(); }
 
 void() wiz_die =
 {
+	// J_D: spectral scrags just gib, with no head
+	if (self.classname == "monster_wizard_specter")
+	{
+		sound (self, CHAN_VOICE, "player/udeath.wav", 1, ATTN_NORM);
+		ThrowGib ("progs/gib1.mdl", GibVelocityForHealth(self.health));
+		ThrowGib ("progs/gib2.mdl", GibVelocityForHealth(self.health));
+		ThrowGib ("progs/gib3.mdl", GibVelocityForHealth(self.health));
+		remove(self);
+		return;
+	}
+
 // check for gib
 	if (self.health < -40)
 	{
-		Gib ("progs/h_wizard.mdl", self.health);
+		if (self.classname == "monster_wizard_lord")
+			Gib ("progs/h_wlord.mdl", self.health);
+		else
+			Gib ("progs/h_wizard.mdl", self.health);
 		return;
 	}
 
@@ -333,8 +359,22 @@ void() wiz_die =
 void(entity attacker, float damage) Wiz_Pain =
 {
 	sound (self, CHAN_VOICE, "wizard/wpain.wav", 1, ATTN_NORM);
-	if (random()*70 > damage)
-		return;		// didn't flinch
+
+	if (self.classname == "monster_wizard_specter")
+	{
+		if (random()*400 > damage)
+			return;		// didn't flinch
+	}
+	else if (self.classname == "monster_wizard_lord")
+	{
+		if (random()*420 > damage)
+			return;		// didn't flinch
+	}
+	else
+	{
+		if (random()*70 > damage)
+			return;		// didn't flinch
+	}
 
 	wiz_pain1 ();
 }
@@ -343,6 +383,7 @@ void(entity attacker, float damage) Wiz_Pain =
 void() monster_wizard_spawn =
 {
 	self.classname = "monster_wizard";
+	self.type = "scrag";
 		
 	self.solid = SOLID_SLIDEBOX;
 	//self.movetype = MOVETYPE_STEP;
@@ -350,6 +391,7 @@ void() monster_wizard_spawn =
 	setmodel (self, "progs/wizard.mdl");
 
 	setsize (self, VEC_HULL_MIN, VEC_HULL_MAX);
+	if (!self.health)
 	self.health = 80;
 
 	self.th_stand = wiz_stand1;
@@ -382,11 +424,18 @@ Flags:
 "Instawake" spawn angry at activator
 
 Keys:
+"health" adjusted health amount
 "target" entity to trigger when killed
 "targetname" entity name
+"no_infight" if set to 1 (or higher), this individual won't infight ever (doesn't provoke and isn't provoked)
 */
 /*FGD
-@PointClass base(Monster) size(-16 -16 -24, 16 16 40) model({ "path": ":progs/wizard.mdl" }) = monster_wizard : "Scrag" []
+@PointClass base(Monster) size(-16 -16 -24, 16 16 40) model({ "path": ":progs/wizard.mdl" }) = monster_wizard : "Scrag
+
+Default health = 80"
+[
+health(integer) : "Custom health amount"
+]
 */
 void() monster_wizard =
 {
@@ -410,6 +459,7 @@ void() monster_wizard =
 	precache_sound ("wizard/wpain.wav");
 	precache_sound ("wizard/wsight.wav");
 
+	if (!self.health)
 	self.health = 80;
 	//setsize (self, '-16 -16 -24', '16 16 40');
 	setsize (self, VEC_HULL_MIN, VEC_HULL_MAX);
@@ -417,6 +467,192 @@ void() monster_wizard =
 	
 	addmonster(1);
 	monster_wizard_spawn();
+}
+
+
+
+// J_D: The Spectral Scrag
+
+void() monster_wizard_specter_spawn =
+{
+	self.classname = "monster_wizard_specter";
+	self.type = "scrag";
+		
+	self.solid = SOLID_SLIDEBOX;
+	//self.movetype = MOVETYPE_STEP;
+
+	setmodel (self, "progs/wizard.mdl");
+
+	setsize (self, VEC_HULL_MIN, VEC_HULL_MAX);
+	if (!self.health)
+	self.health = 180;
+	self.alpha = 0.4;
+
+	self.th_stand = wiz_stand1;
+	self.th_walk = wiz_walk1;
+	self.th_run = wiz_run1;
+	self.th_missile = wiz_fast1;
+	self.th_pain = Wiz_Pain;
+	self.th_die = wiz_die;
+	self.th_checkattack = WizardCheckAttack;
+
+	if (self.deathtype == string_null)
+		self.deathtype = "was ended by a Spectral Scrag";
+
+	self.height = zeroconvertdefault(self.height, 35);
+	self.jump_flag = self.height;	// remember original value for short term nav tweaking
+	flymonster_start();
+}
+
+void() monster_wizard_specter_spawner = {mon_spawner_use(monster_wizard_specter_spawn);}
+
+/*QUAKED monster_wizard_specter (1 0 0) (-16 -16 -24) (16 16 40) AMBUSH ? ? ? TRIGGERED NOTFOG NOTELEFRAG INSTAWAKE
+Spectral Scrag, 180 health points.
+
+Flags:
+"ambush" only wake up on seeing the player, not another monster getting angry
+
+"Triggered"	will not spawn until triggered - triggering again will wake him up. Set 'count' to make this a multi-use spawner.
+"NoTfog" 	supress teleport glitter when spawned with 'triggered'
+"NoTelefrag" will silently fail to spawn if doing so would telefrag an existing monster. will try again automatically 2x/second until it succeeds.
+"Instawake" spawn angry at activator
+
+Keys:
+"health" adjusted health amount
+"target" entity to trigger when killed
+"targetname" entity name
+"no_infight" if set to 1 (or higher), this individual won't infight ever (doesn't provoke and isn't provoked)
+*/
+/*FGD
+@PointClass base(Monster) size(-16 -16 -24, 16 16 40) model({ "path": ":progs/wizard.mdl" }) = monster_wizard_specter : "Spectral Scrag
+
+Default health = 180"
+[
+health(integer) : "Custom health amount"
+]
+*/
+void() monster_wizard_specter =
+{
+	if (!SUB_ShouldSpawn()) return;
+	if (nomonster()) return;
+	if (deathmatch)
+	{
+		remove(self);
+		return;
+	}
+	precache_model ("progs/wizard.mdl");
+	precache_model ("progs/w_spike.mdl");
+	precache_model ("progs/w_spike2.mdl");
+
+	precache_sound ("wizard/hit.wav");		// used by c code
+	precache_sound ("wizard/wattack.wav");
+	precache_sound ("wizard/wdeath.wav");
+	precache_sound ("wizard/widle1.wav");
+	precache_sound ("wizard/widle2.wav");
+	precache_sound ("wizard/wpain.wav");
+	precache_sound ("wizard/wsight.wav");
+
+	if (!self.health)
+	self.health = 180;
+	//setsize (self, '-16 -16 -24', '16 16 40');
+	setsize (self, VEC_HULL_MIN, VEC_HULL_MAX);
+	if ( monster_spawnsetup( monster_wizard_specter_spawner ) ) return;
+	
+	addmonster(1);
+	monster_wizard_specter_spawn();
+}
+
+
+
+
+// J_D: The Scrag Lord
+
+void() monster_wizard_lord_spawn =
+{
+	self.classname = "monster_wizard_lord";
+	self.type = "scrag";
+		
+	self.solid = SOLID_SLIDEBOX;
+	//self.movetype = MOVETYPE_STEP;
+
+	setmodel (self, "progs/wizlord.mdl");
+
+	setsize (self, VEC_HULL_MIN, VEC_HULL_MAX);
+	if (!self.health)
+	self.health = 1200;
+
+	self.th_stand = wiz_stand1;
+	self.th_walk = wiz_walk1;
+	self.th_run = wiz_run1;
+	self.th_missile = wiz_fast1;
+	self.th_pain = Wiz_Pain;
+	self.th_die = wiz_die;
+	self.th_checkattack = WizardCheckAttack;
+
+	if (self.deathtype == string_null)
+		self.deathtype = "was terminated by a Scrag Lord";
+
+	self.height = zeroconvertdefault(self.height, 35);
+	self.jump_flag = self.height;	// remember original value for short term nav tweaking
+	flymonster_start();
+}
+
+void() monster_wizard_lord_spawner = {mon_spawner_use(monster_wizard_lord_spawn);}
+
+/*QUAKED monster_wizard_lord (1 0 0) (-16 -16 -24) (16 16 40) AMBUSH ? ? ? TRIGGERED NOTFOG NOTELEFRAG INSTAWAKE
+Scrag Lord, 1200 health points.
+
+Flags:
+"ambush" only wake up on seeing the player, not another monster getting angry
+
+"Triggered"	will not spawn until triggered - triggering again will wake him up. Set 'count' to make this a multi-use spawner.
+"NoTfog" 	supress teleport glitter when spawned with 'triggered'
+"NoTelefrag" will silently fail to spawn if doing so would telefrag an existing monster. will try again automatically 2x/second until it succeeds.
+"Instawake" spawn angry at activator
+
+Keys:
+"health" adjusted health amount
+"target" entity to trigger when killed
+"targetname" entity name
+"no_infight" if set to 1 (or higher), this individual won't infight ever (doesn't provoke and isn't provoked)
+*/
+/*FGD
+@PointClass base(Monster) size(-16 -16 -24, 16 16 40) model({ "path": ":progs/wizlord.mdl" }) = monster_wizard_lord : "Scrag Lord
+
+Default health = 1200"
+[
+health(integer) : "Custom health amount"
+]
+*/
+void() monster_wizard_lord =
+{
+	if (!SUB_ShouldSpawn()) return;
+	if (nomonster()) return;
+	if (deathmatch)
+	{
+		remove(self);
+		return;
+	}
+	precache_model ("progs/wizlord.mdl");
+	precache_model ("progs/h_wlord.mdl");
+	precache_model ("progs/sl_spike.mdl");
+
+	precache_sound ("wizard/hit.wav");		// used by c code
+	precache_sound ("wizard/wattack.wav");
+	precache_sound ("wizard/wdeath.wav");
+	precache_sound ("wizard/widle1.wav");
+	precache_sound ("wizard/widle2.wav");
+	precache_sound ("wizard/wpain.wav");
+	precache_sound ("wizard/wsight.wav");
+
+	if (!self.health)
+	self.health = 1200;
+	//setsize (self, '-16 -16 -24', '16 16 40');
+	setsize (self, VEC_HULL_MIN, VEC_HULL_MAX);
+	if ( monster_spawnsetup( monster_wizard_lord_spawner ) ) return;
+	
+	addmonster(1);
+	monster_wizard_lord_spawn();
 }
 
 

@@ -43,7 +43,7 @@ void() T_ExplosiveTouch =
 void() T_MissileExplode =
 {
 	local float	damg;
-	damg = 100 + random()*20;
+	damg = 120;
 	
 	if (other.health)
 	{
@@ -91,8 +91,8 @@ void() W_FireRocket =
 	makevectors (self.v_angle);
 	loc = self.origin + v_forward * 8 + '0 0 16';
 	
-		missile = launch_rocket( loc, v_forward * 1000 );
-		self.attack_finished = time + 0.8;
+		missile = launch_rocket( loc, v_forward * cvar("w_rocket_speed") );
+		self.attack_finished = time + 0.6;
 }
 
 //=============================================================================

@@ -123,7 +123,7 @@ void() BackpackTouch =
 
 	if ((coop == 1 && self.buddy && self.buddy == other)
 		|| (!other.weapon))
-		SUB_CallAsSelf(W_SelectBestWeapon, other);		
+		SUB_CallAsSelf(W_SelectBestWeapon, other);
 	else
 		SUB_CallAsSelf(W_SetCurrentAmmo, other);
 	ItemTouched();

@@ -291,6 +291,8 @@ float() tbaby_check_attack =
 	else
 		chance = 0;
 
+	if (self.goalentity.classname == "path_angry") chance = chance * 0.2;
+
 	if (random() < chance)
 	{
 		self.attack_state = AS_MISSILE;
@@ -311,6 +313,7 @@ void() monster_tarbaby_spawn =
 	setmodel (self, "progs/tarbaby.mdl");
 
 	setsize (self, '-16 -16 -24', '16 16 40');
+	if (!self.health)
 	self.health = 80;
 	self.yaw_speed = 30;
 
@@ -345,12 +348,19 @@ Flags:
 "Instawake" spawn angry at activator
 
 Keys:
+"health" adjusted health amount
 "target" entity to trigger when killed
 "targetname" entity name
 "movedir" set to a velocity to make the monster jump on awakening
+"no_infight" if set to 1 (or higher), this individual won't infight ever (doesn't provoke and isn't provoked)
 */
 /*FGD
-@PointClass base(Monster) size(-16 -16 -24, 16 16 24) model({ "path": ":progs/tarbaby.mdl" }) = monster_tarbaby : "Spawn" []
+@PointClass base(Monster) size(-16 -16 -24, 16 16 24) model({ "path": ":progs/tarbaby.mdl" }) = monster_tarbaby : "Spawn
+
+Default health = 80"
+[
+health(integer) : "Custom health amount"
+]
 */
 void() monster_tarbaby =
 {
@@ -370,6 +380,7 @@ void() monster_tarbaby =
 	precache_sound2 ("blob/idle.wav");
 
 	setsize (self, '-16 -16 -24', '16 16 40');
+	if (!self.health)
 	self.health = 80;
 	if ( monster_spawnsetup( monster_tarbaby_spawner ) ) return;
 	

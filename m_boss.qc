@@ -372,6 +372,8 @@ The more health he's lost, and the higher the skill level the player is on, the 
 The E1M7 boss fight requires an event_lightning.
 
 If 'SHOOTABLE' is set, he'll bleed when shot, and die the old-fashioned way when shot enough. Can even be telefragged. 'Health' defaults to 1000.
+
+"no_infight" if set to 1 (or higher), he won't infight ever in any way (doesn't provoke and isn't provoked)
 */
 /*FGD
 @PointClass base(Angle, Appearflags, Target, Targetname, Deathtype) size(-128 -128 -24, 128 128 256) color(240 0 0) model({ "path": ":progs/boss.mdl" }) = monster_boss : "Ch'thon. Throws lava bombs until electrocuted to death.

@@ -309,6 +309,10 @@ float sandyMadeThis; // for special-casing SOMEBODY's stale keyvalues and clumsy
 .float		search_time;
 .float		attack_state;
 .float 		pausetime;
+.float		no_infight;  // J_D's
+.float		noselfbomb;  // J_D's, for monsters that shouldn't splash damage themselves
+.float		followingpath;  // J_D: from Alkaline
+.entity		startpath;  // J_D: from Alkaline
 
 // player only fields
 .float		walkframe;
@@ -392,6 +396,12 @@ float sandyMadeThis; // for special-casing SOMEBODY's stale keyvalues and clumsy
 .vector		oldvelocity;	// necessary for getting projectiles to pass through .notrace entities
 .entity		trueowner;		// now this is getting dumb
 .void(float unlock) lock;	// so entities can define their own target_lock cleanup
+
+// J_D: for rubicon2.qc stuff
+float BREAKABLE_NO_MONSTERS = 1;
+.float 		wantedgravity;
+.float		onladder;
+.string		mdl_debris;
 
 // OVERLOADS:
 .float rand = healamount;	// for trigger_timer
@@ -505,11 +515,103 @@ void(string s) changelevel = #70;
 
 void(string var, string val) cvar_set = #72;	// sets cvar.value
 
-void(entity client, string s) centerprint = #73;	// sprint, but in middle
-void(entity client, string s, string s) centerprint2 = #73;	// sprint, but in middle
-void(entity client, string s, string s, string s) centerprint3 = #73;	// sprint, but in middle
-void(entity client, string s, string s, string s, string s) centerprint4 = #73;	// sprint, but in middle
-void(entity client, string s, string s, string s, string s, string s) centerprint5 = #73;	// sprint, but in middle
+//	J_D: comments from progs_dump preserved
+//
+// The following function definitions allow the engine's builtin
+// centerprint function (builtin #73) to be called with different
+// numbers of string arguments.  The string that will be printed is the
+// concatenation of the string arguments.
+//
+// These definitions work because builtin #73 is implemented in such
+// a way that it can accept multiple string arguments in this manner,
+// even though the original QuakeC code didn't take advantage of this
+// fact.  A maximum of seven string arguments can be passed because
+// a function is limited to a total of eight arguments (and the first
+// argument is the client).  Note that in the original engine, all of
+// the strings for a centerprint message are concatenated into a single
+// 256-char buffer, therefore excessively long messages should be
+// avoided.  -- iw
+//
+
+.float suppressCenterPrint;
+
+void(entity client, string s1) centerprint_builtin = #73;
+void(entity client, string s1, string s2) centerprint_builtin2 = #73;
+void(entity client, string s1, string s2, string s3) centerprint_builtin3 = #73;
+void(entity client, string s1, string s2, string s3, string s4) centerprint_builtin4 = #73;
+void(entity client, string s1, string s2, string s3, string s4, string s5) centerprint_builtin5 = #73;
+void(entity client, string s1, string s2, string s3, string s4, string s5, string s6) centerprint_builtin6 = #73;
+void(entity client, string s1, string s2, string s3, string s4, string s5, string s6, string s7) centerprint_builtin7 = #73;
+
+void(entity client, string s1) centerprint = {
+	// Is the centerprint message being used by something else?
+	if (!client.suppressCenterPrint)
+		centerprint_builtin(client, s1);
+	else {
+		// Send message to client console instead
+		sprint(client, "(centerprint) ");
+		sprint(client, s1);
+		sprint(client, "\n");
+	}
+}
+
+void(entity client, string s1, string s2) centerprint2 = {
+	// Is the centerprint message being used by something else?
+	if (!client.suppressCenterPrint)
+		centerprint_builtin2(client, s1, s2);
+	else {
+		// Send message to client console instead
+		sprint(client, "(centerprint) ");
+		sprint(client, s1);
+		sprint(client, s2);
+		sprint(client, "\n");
+	}
+}
+
+void(entity client, string s1, string s2, string s3) centerprint3 = {
+	// Is the centerprint message being used by something else?
+	if (!client.suppressCenterPrint)
+		centerprint_builtin3(client, s1, s2, s3);
+	else {
+		// Send message to client console instead
+		sprint(client, "(centerprint) ");
+		sprint(client, s1);
+		sprint(client, s2);
+		sprint(client, s3);
+		sprint(client, "\n");
+	}
+}
+
+void(entity client, string s1, string s2, string s3, string s4) centerprint4 = {
+	// Is the centerprint message being used by something else?
+	if (!client.suppressCenterPrint)
+		centerprint_builtin4(client, s1, s2, s3, s4);
+	else {
+		// Send message to client console instead
+		sprint(client, "(centerprint) ");
+		sprint(client, s1);
+		sprint(client, s2);
+		sprint(client, s3);
+		sprint(client, s4);
+		sprint(client, "\n");
+	}
+}
+
+void(entity client, string s1, string s2, string s3, string s4, string s5) centerprint5 = {
+	// Is the centerprint message being used by something else?
+	if (!client.suppressCenterPrint)
+		centerprint_builtin5(client, s1, s2, s3, s4, s5);
+	else {
+		// Send message to client console instead
+		sprint(client, "(centerprint) ");
+		sprint(client, s1);
+		sprint(client, s2);
+		sprint(client, s3);
+		sprint(client, s4);
+		sprint(client, s5);
+		sprint(client, "\n");
+	}
+}
 
 void(vector pos, string samp, float vol, float atten) ambientsound = #74;
 
@@ -579,6 +681,7 @@ void(float num, float type, string name) globalstat = #233;
 		16384 : "Alt Target Pattern" : 0
 	]
 ]
+=======
 */
 
 #pragma noref 0

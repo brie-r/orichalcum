@@ -165,10 +165,24 @@ Keys:
     1 = metal
     2 = base
 "gravity" how fast your dreams come crashing down
+"sky" skybox
+
+"_wateralpha" water transparency
+"_lavalpha" lava transparency
+"_slimealpha" slime transparency
+"_telealpha" teleporter transparency
+
+"_bounce" use bounced lights
+"_bouncestyled" use bounced styled lights
+"_bouncescale" scale of brightness from bounced lighting, default 1
 
 "_sunlight" "#"
 "_sun_mangle" "# # 0" yaw pitch roll. pitch is 90 to -90 degrees up to down.
 "_sunlight_color" "# # #"
+"_sunlight2" "#" dome of lights instead of directed sunlight
+"_sunlight2_color" : "# # #"
+"_sunlight3" : "#" same as sunlight 2, but for the bottom hemisphere
+"_sunlight3_color" : "# # #"
 
 "_dirt" use dirtmapping
 "_dirtdepth" length of dirt rays, default 128.
@@ -193,12 +207,20 @@ Keys:
 	gravity(integer) : "Gravity"
 	sky(string) : "Skybox"
 	_skyfog(string) : "Sky fog strength"
-	_wateralpha(string) : "Water alpha"
+	_wateralpha(string) : "Water alpha" : "1.0"
 	_lavaalpha(string) : "Lava alpha" : "1.0"
+	_slimealpha(string) : "Slime alpha" : "1.0"
 	_telealpha(string) : "Tele alpha" : "1.0"
+	_bounce(integer) : "Use bounced lights" : 0
+	_bouncestyled(integer) : "Use bounced styled lights" : 0
+	_bouncescale(string) : "Scale of brightness from bounced lighting" : "1.0"
 	_sunlight(integer) : "Sunlight"
 	_sun_mangle(string) : "Sun mangle (Yaw pitch roll)"
 	_sunlight_color(string) : "Sun color"
+	_sunlight2(integer) : "Sunlight 2, dome of lights instead of directed sunlight"
+	_sunlight2_color(color255) : "Sunlight 2 color (RGB values)"
+	_sunlight3(integer) : "Same as Sunlight 2, but for the bottom hemisphere"
+	_sunlight3_color(color255) : "Sunlight 3 color (RGB values)"
 	_dirt(integer) : "use dirtmapping" : 0
 	_dirtdepth(integer) : "length of dirt rays" : 128
 	_dirtscale(string) : "Scale factor used in dirt calculations, higher is darker" : "1.0"
@@ -210,6 +232,8 @@ void() worldspawn =
 {
 	lastspawn = world;
 	startingserverflags = serverflags;
+
+	init_cvars();
 
 	InitBodyQueue ();
 	InitLightStyles();	// moved to lights.qc
@@ -226,7 +250,7 @@ void() worldspawn =
 		}
 	}
 	cvar_set("sv_gravity", ftos(self.gravity));
-	
+
 	// learn to map petersen i hate u
 	if (mapname == "e4m5") sandyMadeThis = TRUE;
 	
@@ -235,7 +259,7 @@ void() worldspawn =
 	skill = cvar("skill");
 	
 	self.light_lev = 0;	// shut up FTEQCC warning
-	
+
 	fog_fixKeys();	// -1 -> 0 switch, if world has fog values
 	
 	keyType = "Key";	// default if there are no keys placed in the map
@@ -386,7 +410,7 @@ void() worldspawn =
 void() StartFrame =
 {
 	teamplay = cvar("teamplay");
-	
+
 	if (initCleanup)
 	{
 		initCleanup -= 1;
@@ -404,7 +428,7 @@ void() StartFrame =
 		
 		gamestarted = TRUE;
 	}
-		
+	
 	float sk = cvar("skill");
 	entity skbtn;
 	if (sk != skill)
@@ -419,8 +443,8 @@ void() StartFrame =
 			skbtn = skbtn.owner;
 		}
 		self = world;
-	}	
-	
+	}
+		
 	framecount++;
 	//cvar_set("registered",ftos(framecount));
 	

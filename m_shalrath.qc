@@ -131,7 +131,7 @@ ShalMissile
 
 void() ShalMissileExplode =
 {
-	T_RadiusDamage (self, self.trueowner, 40, world);
+	T_RadiusDamage (self, self.trueowner, 40, world, DMGTYPE_EXPLOSION);
 	//sound (self, CHAN_WEAPON, "weapons/r_exp3.wav", 1, ATTN_NORM);
 
 	T_ExplosiveTouch();
@@ -196,17 +196,6 @@ void() ShalHome =
 		return;
 	}
 	
-	if (!self.deadflag)
-	{
-		if ( self.owner.health <= 0		// if our mama dies
-			|| self.owner.customflags & CFL_PLUNGE )	// or falls in a hole
-		{
-			self.deadflag = TRUE;
-			setmodel(self, "progs/v_spike2.mdl");	// stop sparkling
-			setsize(self, VEC_ORIGIN, VEC_ORIGIN);
-		}
-	}
-	
 	self.think = ShalHome;
 	self.nextthink = time + SHAL_BALL_THINK_RATE;
 	rate = SHAL_BALL_TURN_RATE;
@@ -225,7 +214,9 @@ void() ShalHome =
 	if (skill < 3)
 	{
 		// 'poor' homing (half turn rate):
-		if ( self.deadflag		// if our mama dies or falls in a hole
+		if ( self.owner.health <= 0		// if our mama dies
+			|| self.owner.customflags & CFL_PLUNGE	// or falls in a hole
+			
 			//|| !visible(self.enemy)		// if we lost LOS
 			// took ^^ this one out, because it made voreballs even more effective at going
 			// around corners, which meant that courageous players had a nice new dodge move
@@ -259,34 +250,25 @@ void() ShalHome =
 	{
 		// nightmare: vanilla-evil homing with corner following to force engagement rather than encourage it
 		enemy_vis = visible(self.enemy);
-		
-		self.dest2 = self.dest;
 		if (enemy_vis)	// go straight to follow player around corners
 		{
-			// remember last seen positions for corner hax
+			// remember last seen position for corner hax
 			self.dest = self.enemy.origin;
-		}
-		else if (self.dest2 == self.dest)
-		{
-			// player has been out of sight for two frames, don't keep changing velocity or
-			// when we reach that point we'll dance around it weirdly
-			self.oldvelocity = self.velocity;
-			return;
 		}
 		
 		// poor homing
-		if ( self.deadflag		// if our mama dies or falls in a hole
+		if ( self.owner.health <= 0	 || self.owner.customflags & CFL_PLUNGE
 			|| pointcontents(self.origin) < CONTENT_SOLID )
 		{
 			if (dot > 0)
 			{
 				rate *= max(1, 1.5 * (1 - dot));
 			}
-			self.velocity = SHAL_BALL_VEL * ShalTurnToward(self.dest2, rate * 0.5);
+			self.velocity = SHAL_BALL_VEL * ShalTurnToward(self.dest, rate * 0.5);
 		}
 		else // evile homing
 		{
-			self.velocity = SHAL_BALL_VEL * normalize(self.dest2 + '0 0 10' - self.origin);
+			self.velocity = SHAL_BALL_VEL * normalize(self.dest + '0 0 10' - self.origin);
 		}
 		
 		self.velocity *= 1 + dist;
@@ -334,12 +316,14 @@ void() ShalMissile =
 void() monster_shalrath_spawn =
 {
 	self.classname = "monster_shalrath";
+	self.noselfbomb = 1;
 		
 	self.solid = SOLID_SLIDEBOX;
 	//self.movetype = MOVETYPE_STEP;
 	
 	setmodel (self, "progs/shalrath.mdl");
 	setsize (self, VEC_HULL2_MIN, VEC_HULL2_MAX);
+	if (!self.health)
 	self.health = 400;
 
 	self.th_stand = shal_stand;
@@ -374,12 +358,19 @@ Flags:
 "Instawake" spawn angry at activator
 
 Keys:
+"health" adjusted health amount
 "target" entity to trigger when killed
 "targetname" entity name
 "movedir" set to a velocity to make the monster jump on awakening
+"no_infight" if set to 1 (or higher), this individual won't infight ever (doesn't provoke and isn't provoked)
 */
 /*FGD
-@PointClass base(Monster) size(-32 -32 -24, 32 32 64) model({ "path": ":progs/shalrath.mdl" }) = monster_shalrath : "Vore" []
+@PointClass base(Monster) size(-32 -32 -24, 32 32 64) model({ "path": ":progs/shalrath.mdl" }) = monster_shalrath : "Vore
+
+Default health = 400"
+[
+health(integer) : "Custom health amount"
+]
 */
 void() monster_shalrath =
 {
@@ -393,7 +384,6 @@ void() monster_shalrath =
 	precache_model2 ("progs/shalrath.mdl");
 	precache_model2 ("progs/h_shal.mdl");
 	precache_model2 ("progs/v_spike.mdl");
-	precache_model2 ("progs/v_spike2.mdl");
 	
 	precache_sound2 ("shalrath/attack.wav");
 	precache_sound2 ("shalrath/attack2.wav");
@@ -402,6 +392,7 @@ void() monster_shalrath =
 	precache_sound2 ("shalrath/pain.wav");
 	precache_sound2 ("shalrath/sight.wav");
 	
+	if (!self.health)
 	self.health = 400;
 	setsize (self, VEC_HULL2_MIN, VEC_HULL2_MAX);
 	if ( monster_spawnsetup( monster_shalrath_spawner ) ) return;

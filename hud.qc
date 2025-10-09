@@ -4,8 +4,7 @@ const string anumber[10] = { "anum_0", "anum_1", "anum_2", "anum_3", "anum_4", "
 const string powerupflash[6] = { "gfx/sb_","gfx/sba1_","gfx/sba2_","gfx/sba3_","gfx/sba4_","gfx/sba5_" };
 const float flash[11] = {2,3,4,5,2,3,4,5,1,0,0};
 
-const float weaponflags[8] = {
-	IT_AXE,
+const float weaponflags[7] = {
 	IT_SHOTGUN,
 	IT_SUPER_SHOTGUN,
 	IT_NAILGUN,
@@ -14,10 +13,8 @@ const float weaponflags[8] = {
 	IT_ROCKET_LAUNCHER,
 	IT_LIGHTNING
 };
-const float weaponbits[8] = { 12, 0, 1, 2, 3, 4, 5, 6 };
-
-const string weaponflash[6] = { "gfx/inv_","gfx/inv2_","gfx/inva2_","gfx/inva3_","gfx/inva4_","gfx/inva1_" };	// use selected glow as a better last frame
-const string weaponlabel[8] = {	"axe","shotgun","sshotgun","nailgun","snailgun","rlaunch","srlaunch","lightng" };
+const string weaponflash[6] = { "gfx/inv_","gfx/inv2_","gfx/inva2_","gfx/inva3_","gfx/inva4_","gfx/inva5_" };	// use selected glow as a better last frame
+const string weaponlabel[7] = {	"shotgun","sshotgun","nailgun","snailgun","rlaunch","srlaunch","lightng" };
 
 float stat_items, stat_items2, stat_health, keytype;
 float paintime, lookseed;
@@ -102,7 +99,7 @@ void(vector pos) Hud_DrawLevelInfoBar =
 	w = stringwidth(s, TRUE, '8 8');
 	drawstring(pos + '312 12' - '1 0' * w, s, '8 8', '1 1 1', 1, 0);
 	gap -= w;
-	
+
 	//if (world.model == "maps/start.bsp")
 	//{
 		if (skill == 3) s = "skill \b3\b";
@@ -261,13 +258,13 @@ void Hud_DrawArmorIcon(vector pos)
 void Hud_DrawCurrentAmmoIcon(vector pos)
 {
 	if (stat_items & IT_SHELLS)
-		drawpic(pos, "sb_shellsb", '24 24', '1 1 1', 1, 0);
+		drawpic(pos, "sb_shells", '24 24', '1 1 1', 1, 0);
 	else if (stat_items & IT_NAILS)
-		drawpic(pos, "sb_nailsb", '24 24', '1 1 1', 1, 0);
+		drawpic(pos, "sb_nails", '24 24', '1 1 1', 1, 0);
 	else if (stat_items & IT_ROCKETS)
-		drawpic(pos, "sb_rocketb", '24 24', '1 1 1', 1, 0);
+		drawpic(pos, "sb_rocket", '24 24', '1 1 1', 1, 0);
 	else if (stat_items & IT_CELLS)
-		drawpic(pos, "sb_cellsb", '24 24', '1 1 1', 1, 0);
+		drawpic(pos, "sb_cells", '24 24', '1 1 1', 1, 0);
 }
 
 void Hud_DrawSBar(vector pos)
@@ -356,11 +353,11 @@ void(float wnum, vector pos, float sel) Hud_DrawWeapon
 	vector sz;
 	float fram;
 	
-	fram = HUD_FlashTime(weaponbits[wnum]);
+	fram = HUD_FlashTime(wnum);
 	if (sel && fram == 0) fram = 1;	// selected weapon glow
 	
 	sz = '24 16';
-	if (wnum == 7) sz = '48 16';
+	if (wnum == 6) sz = '48 16';
 	
 	string pic = strcat(weaponflash[fram], weaponlabel[wnum]);
 	
@@ -475,8 +472,8 @@ void Hud_DrawIBarWeapons(vector pos)
 	pos_y += 8;
 	for (i = 0; i < 7; i++)
 	{
-		if (stat_items & weaponflags[i+1])
-			Hud_DrawWeapon(i+1, pos + '24 0' * i, (currweap == weaponflags[i+1]));
+		if (stat_items & weaponflags[i])
+			Hud_DrawWeapon(i, pos + '24 0' * i, (currweap == weaponflags[i]));
 	}
 }
 
@@ -619,10 +616,10 @@ void Hud_DrawModernRight(vector pos, float expanded)
 
 void Hud_DrawModernWeapons(vector pos)
 {
-	pos += '0 -72';
+	pos += '0 -64';
 	float currweap = getstatf(STAT_ACTIVEWEAPON);
 	float i;
-	for (i = 7; i >= 0; i--)
+	for (i = 6; i >= 0; i--)
 	{
 		if (stat_items & weaponflags[i])
 		{
@@ -669,7 +666,7 @@ void Hud_DrawRankings(vector pos)
 void() HUD_UpdateStats =
 {
 	float olditems, olditems2, i, f;
-	
+
 	coopdata = getstatf(STAT_CLIENTDATA);
 	if (intermission || coopdata == -1) return;
 	
@@ -739,9 +736,9 @@ void(vector screensize) Hud_DrawTint =
 	
 	f = scr_tint / 255;
 	color = scr_tintcolor / 255;
-
-	drawfill('0 0', screensize, color, f, 0);
 	
+	drawfill('0 0', screensize, color, f, 0);
+
 	/*
 	vector hpanel, vpanel;
 	hpanel_x = screensize_x;
@@ -858,7 +855,7 @@ void(vector screensize, float scoreboard) CSQC_DrawScores =
 
 	value = stringwidth( s, TRUE, '8 8');
 	drawstring(pos + [160 - value/2, 36], s, '8 8', '1 1 1', 1, 0);
-	
+
 	mins = floor(intermission_time / 60);
 	secs = floor(intermission_time - mins * 60);
 
@@ -883,11 +880,9 @@ void(vector screensize, float scoreboard) CSQC_DrawScores =
 		div += '24 0';
 	}
 	
-	drawpic(pos + '0 48', "gfx/inter2.lmp", '160 144', '1 1 1', 1);
-	
 	// kills
 	pos += '0 56';
-	//drawsubpic(pos + '51 2', '96 24', "gfx/inter2.lmp", [8/160, 88/144], [96/160, 24/144], '1 1 1', 1);
+	drawsubpic(pos + '51 2', '96 24', "gfx/inter.lmp", [8/160, 88/144], [96/160, 24/144], '1 1 1', 1);
 	
 	value = clampf(getstatf(STAT_MONSTERS), 9999);
 	Hud_DrawLargeValue(pos+div, value, -1);
@@ -897,7 +892,7 @@ void(vector screensize, float scoreboard) CSQC_DrawScores =
 	
 	// secrets
 	pos += '0 36';
-	//drawsubpic(pos + '8 2', '136 24', "gfx/inter2.lmp", [8/160, 48/144], [136/160, 24/144], '1 1 1', 1);
+	drawsubpic(pos + '8 2', '136 24', "gfx/inter.lmp", [8/160, 48/144], [136/160, 24/144], '1 1 1', 1);
 	
 	value = clampf(getstatf(STAT_SECRETS), 9999);
 	Hud_DrawLargeValue(pos+div, value, -1);
@@ -907,7 +902,7 @@ void(vector screensize, float scoreboard) CSQC_DrawScores =
 	
 	// time
 	pos += '0 36';
-	//drawsubpic(pos + '67 2', '80 24', "gfx/inter2.lmp", [8/160, 8/144], [80/160, 24/144], '1 1 1', 1);
+	drawsubpic(pos + '67 2', '80 24', "gfx/inter.lmp", [8/160, 8/144], [80/160, 24/144], '1 1 1', 1);
 	
 	mins = clampf(mins, 999);
 	Hud_DrawLargeValue(pos+div, mins, -1);
@@ -934,10 +929,6 @@ void() Hud_Init
 		precache_pic(strcat(powerupflash[i], "invul"), TRUE);
 		precache_pic(strcat(powerupflash[i], "suit"), TRUE);
 		precache_pic(strcat(powerupflash[i], "quad"), TRUE);
-	}
-	for (i = 0; i < 6; i++)
-	{
-		precache_pic(strcat(weaponflash[i], "axe"), TRUE);
 	}
 	
 	precache_pic("gfx/sb_mkey1", TRUE);
@@ -980,15 +971,9 @@ void() Hud_Init
 	precache_pic("sb_ammon", TRUE);
 	precache_pic("sb_ammor", TRUE);
 	
-	precache_pic("sb_cellsb", TRUE);
-	precache_pic("sb_nailsb", TRUE);
-	precache_pic("sb_shellsb", TRUE);
-	precache_pic("sb_rocketb", TRUE);
-	
 	precache_pic("sb_teams", TRUE);
 	
 	precache_pic("gfx/complete.lmp", FALSE);
-	precache_pic("gfx/inter2.lmp", FALSE);
 	
 	paintime = -1;
 	lookseed = floor(random() * 100);

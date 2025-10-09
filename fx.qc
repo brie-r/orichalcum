@@ -1678,7 +1678,7 @@ void() target_fade =
 	{
 		self.speed = zeroconvertdefault(self.speed, 1);
 		self.speed2 = zeroconvertdefault(self.speed2, self.speed);
-		
+
 		if (self.spawnflags & 8)
 		{
 			self.use = target_fade_hold;

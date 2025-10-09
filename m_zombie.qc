@@ -1,3 +1,4 @@
+.float		dead_if_crucified;  // J_D: special key for the zombie to be motionless if crucified
 /*
 ==============================================================================
 
@@ -52,6 +53,9 @@ $frame cruc_1 cruc_2 cruc_3 cruc_4 cruc_5 cruc_6
 
 
 //=============================================================================
+
+// J_D: motionless crucified zombie, as in progs_dump
+void() zombie_dead_cruc1 = [$cruc_1, zombie_dead_cruc1] {self.nextthink = time + 1;}
 
 void() zombie_stand1	=[	$stand1,	zombie_stand2	] {ai_stand();}
 void() zombie_stand2	=[	$stand2,	zombie_stand3	] {ai_stand();}
@@ -568,7 +572,7 @@ void() zombie_return =
 	pc = pointcontents(self.origin);
 	if (pc == CONTENT_SOLID || pc == CONTENT_LAVA || pc == CONTENT_SKY)
 		return;	// in something
-	
+
 	self.customflags |= CFL_OMNIVISION;
 	
 	if (self.velocity != '0 0 0' || has_invis(self.enemy))
@@ -662,7 +666,10 @@ void() monster_zombie_spawn =
 	{
 		self.movetype = MOVETYPE_NONE;
 		self.use = zombie_die;
-		zombie_cruc1 ();
+		if (self.dead_if_crucified >= 1)
+			zombie_dead_cruc1 ();
+		else
+			zombie_cruc1 ();
 	}
 	else
 	{
@@ -710,6 +717,8 @@ Keys:
 "target" entity to trigger when killed
 "targetname" entity name
 "movedir" set to a velocity to make the monster jump on awakening
+"no_infight" if set to 1 (or higher), this individual won't infight ever (doesn't provoke and isn't provoked)
+"dead_if_crucified" if set to 1 (or higher) and the zombie uses the Crucified spawnflag, the crucified zombie is motionless
 */
 /*FGD
 @PointClass base(Monster) size(-16 -16 -24, 16 16 32) model({ "path": ":progs/zombie.mdl" }) = monster_zombie : "Zombie" 
@@ -719,6 +728,11 @@ Keys:
 		1 : "Crucified" : 0
 		2 : "Ambush" : 0
 		4 : "Spawn Prone" : 0
+	]
+	dead_if_crucified(choices) : "If this is enabled and the Zombie uses the Crucified spawnflag, the crucified Zombie is motionless" : 0 =
+	[
+		0 : "Disabled"
+		1 : "Enabled"
 	]
 ]
 */

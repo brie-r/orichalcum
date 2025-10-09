@@ -595,6 +595,9 @@ void() PutClientInServer =
 	self.invincible_finished = 0;
 	self.invincible_time = 0;
 	self.effects = 0;
+	self.gravity = 0;
+	self.wantedgravity = 0;
+	self.onladder = 0;
 	self.enemy = world;
 
 	DecodeLevelParms();
@@ -958,6 +961,16 @@ void() PlayerDeathThink =
 	}
 	
 	self.wait = 1;
+}
+
+/*
+===========
+PlayerClimb
+============
+*/
+void() PlayerClimb = //johnfitz
+{
+	self.velocity = '0 0 160';
 }
 
 
@@ -1474,6 +1487,8 @@ Called every frame before physics are run
 */
 void() PlayerPreThink =
 {
+	local float do_ladder_physics;
+
 	if (initCleanup)
 	{
 		fog_setFromEnt( self, self );
@@ -1492,6 +1507,23 @@ void() PlayerPreThink =
 		IntermissionThink ();	// otherwise a button could be missed between
 		return;					// the think tics
 	}
+
+	// note that this code block is here, before the tests which check
+	// whether the player is dead, so that the player's gravity will be
+	// correctly updated even if they e.g. fell off a ladder because
+	// they died -- iw
+	if (self.onladder)
+	{
+		do_ladder_physics = TRUE;
+		self.gravity = 0.0000001;	// not zero, because zero means "default"
+		self.onladder = 0;
+	}
+	else
+	{
+		do_ladder_physics = FALSE;
+		self.gravity = self.wantedgravity;
+	}
+
 	makevectors (self.v_angle);		// is this still used
 									// lunaran: "yes"
 
@@ -1513,14 +1545,28 @@ void() PlayerPreThink =
 	if (self.waterlevel == WL_WAIST)
 		CheckWaterJump ();
 
+
+//johnfitz ladder conditions //added from Rubicon2 client.qc -- dumptruck_ds
+if (do_ladder_physics)
+{
 	if (self.button2)
 	{
-		PlayerJump ();
+		PlayerClimb ();
 	}
 	else
 	{
 		self.flags = self.flags | FL_JUMPRELEASED;
+		self.velocity = 0.9 * self.velocity;
+		self.velocity_z = 0;
 	}
+}
+else
+{
+	if (self.button2)
+		PlayerJump ();
+	else
+		self.flags = self.flags | FL_JUMPRELEASED;
+} //johnfitz
 	
 // teleporters can force a non-moving pause time	
 	if (time < self.pausetime)

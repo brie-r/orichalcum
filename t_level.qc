@@ -260,7 +260,7 @@ entity(entity start) FindPreviousIntermission =
 {
 	if (!start) return world;
 	if (start.classname != "info_intermission") return start;
-	
+
 	return start.oldenemy;
 }
 

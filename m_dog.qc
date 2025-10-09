@@ -355,6 +355,7 @@ void() monster_dog_spawn =
 	setmodel (self, "progs/dog.mdl");
 
 	setsize (self, '-32 -32 -24', '32 32 40');
+	if (!self.health)
 	self.health = 35;
 	self.customflags |= CFL_MELEEONLY;
 
@@ -378,7 +379,7 @@ void() monster_dog_spawn =
 void() monster_dog_spawner = {mon_spawner_use(monster_dog_spawn);}
 
 /*QUAKED monster_dog (1 0 0) (-32 -32 -24) (32 32 40) AMBUSH ? ? ? TRIGGERED NOTFOG NOTELEFRAG INSTAWAKE
-Dog (Rottweiler), 25 health points.
+Dog (Rottweiler), 35 health points.
 
 Flags:
 "ambush" only wake up on seeing the player, not another monster getting angry
@@ -388,12 +389,19 @@ Flags:
 "Instawake" spawn angry at activator
 
 Keys:
+"health" adjusted health amount
 "target" entity to trigger when killed
 "targetname" entity name
 "movedir" set to a velocity to make the monster jump on awakening
+"no_infight" if set to 1 (or higher), this individual won't infight ever (doesn't provoke and isn't provoked)
 */
 /*FGD
-@PointClass base(Monster) size(-32 -32 -24, 32 32 40) model({ "path": ":progs/dog.mdl" }) = monster_dog : "Rottweiler" []
+@PointClass base(Monster) size(-32 -32 -24, 32 32 40) model({ "path": ":progs/dog.mdl" }) = monster_dog : "Rottweiler
+
+Default health = 35"
+[
+health(integer) : "Custom health amount"
+]
 */
 void() monster_dog =
 {
@@ -413,6 +421,7 @@ void() monster_dog =
 	precache_sound ("dog/dsight.wav");
 	precache_sound ("dog/idle.wav");
 
+	if (!self.health)
 	self.health = 35;
 	setsize (self, '-32 -32 -24', '32 32 40');
 	if ( monster_spawnsetup( monster_dog_spawner ) ) return;

@@ -82,6 +82,8 @@ float() enforcer_check_attack =
 	else
 		chance = 0;
 
+	if (self.goalentity.classname == "path_angry") chance = chance * 0.2;
+
 	if (random() < chance)
 	{
 		self.attack_state = AS_MISSILE;
@@ -97,7 +99,11 @@ void() enforcer_fire =
 	vector org, vec;
 
 	self.effects = self.effects | EF_MUZZLEFLASH;
-	sound (self, CHAN_WEAPON, "enforcer/enfire.wav", 1, ATTN_NORM);
+
+	if (self.classname == "monster_commando")
+		sound (self, CHAN_WEAPON, "commando/c_plasma.wav", 1, ATTN_NORM);
+	else
+		sound (self, CHAN_WEAPON, "enforcer/enfire.wav", 1, ATTN_NORM);
 
 	org = enforcer_muzzle_org();
 	vec = normalize(enemy_vispos() - org + enemy_aim_vertical());
@@ -110,7 +116,10 @@ void() enforcer_fire =
 		vec = normalize(vec);
 	}
 	
-	launch_laser(org, vec * 600);
+	if (self.classname == "monster_commando")
+		launch_plasma(org, vec * 650);
+	else
+		launch_laser(org, vec * 600);
 }
 
 //============================================================================
@@ -159,9 +168,9 @@ void()	enf_run8	=[	$run8  ,	enf_run1	] {ai_run(11);}
 
 float() enf_shouldbreak =
 {
-	if (!alive(self.enemy) || self.enemy.customflags & CFL_LIMBO )
+	if (!alive(self.enemy) || self.enemy.customflags & CFL_LIMBO || self.goalentity.classname == "path_angry")
 		return TRUE;
-	
+
 	enemy_range = range(self.enemy);
 	if (enemy_range >= RANGE_TOOFAR)
 		return TRUE;
@@ -243,6 +252,12 @@ void(entity attacker, float damage)	enf_pain =
 	if (self.pain_finished > time)
 		return;
 
+	if (self.classname == "monster_commando")
+	{
+		if (random()*50 > damage)
+			return;		// J_D: the commando didn't flinch
+	}
+
 	float r;
 	self.yaw_speed = 20;
 	
@@ -266,15 +281,21 @@ void(entity attacker, float damage)	enf_pain =
 
 //============================================================================
 
-
+// J_D: dropammo function for the Commando only to drop 2 cells on death
+void() human_elite_dropammo =
+{
+	if (self.classname == "monster_commando")
+	{
+		self.ammo_cells = 2;
+		DropBackpack();
+	}
+}
 
 
 void()	enf_die1	=[	$death1,	enf_die2	] {}
 void()	enf_die2	=[	$death2,	enf_die3	] {}
 void()	enf_die3	=[	$death3,	enf_die4	] {
-	self.solid = SOLID_NOT;
-	//self.ammo_cells = 5;
-	//DropBackpack();
+	self.solid = SOLID_NOT;human_elite_dropammo();
 }
 void()	enf_die4	=[	$death4,	enf_die5	] {ai_forward(14);}
 void()	enf_die5	=[	$death5,	enf_die6	] {ai_forward(2);}
@@ -291,9 +312,7 @@ void()	enf_die14	=[	$death14,	SUB_Null	] {}
 void()	enf_fdie1	=[	$fdeath1,	enf_fdie2	] {}
 void()	enf_fdie2	=[	$fdeath2,	enf_fdie3	] {}
 void()	enf_fdie3	=[	$fdeath3,	enf_fdie4	] {
-	self.solid = SOLID_NOT;
-	//self.ammo_cells = 5;
-	//DropBackpack();
+	self.solid = SOLID_NOT;human_elite_dropammo();
 }
 void()	enf_fdie4	=[	$fdeath4,	enf_fdie5	] {}
 void()	enf_fdie5	=[	$fdeath5,	enf_fdie6	] {}
@@ -311,6 +330,7 @@ void() enf_die =
 	if (self.health < -35)
 	{
 		Gib ("progs/h_mega.mdl", self.health);
+		human_elite_dropammo();
 		return;
 	}
 
@@ -326,6 +346,7 @@ void() enf_die =
 void() monster_enforcer_spawn =
 {
 	self.classname = "monster_enforcer";
+	self.type = "soldier";
 		
 	self.solid = SOLID_SLIDEBOX;
 	//self.movetype = MOVETYPE_STEP;
@@ -333,6 +354,7 @@ void() monster_enforcer_spawn =
 	setmodel (self, "progs/enforcer.mdl");
 
 	setsize (self, '-16 -16 -24', '16 16 40');
+	if (!self.health)
 	self.health = 80;
 
 	self.th_stand = enf_stand1;
@@ -363,12 +385,19 @@ Flags:
 "Instawake" spawn angry at activator
 
 Keys:
+"health" adjusted health amount
 "target" entity to trigger when killed
 "targetname" entity name
 "movedir" set to a velocity to make the monster jump on awakening
+"no_infight" if set to 1 (or higher), this individual won't infight ever (doesn't provoke and isn't provoked)
 */
 /*FGD
-@PointClass base(Monster) size(-16 -16 -24, 16 16 40) model({ "path": ":progs/enforcer.mdl" }) = monster_enforcer : "Enforcer" []
+@PointClass base(Monster) size(-16 -16 -24, 16 16 40) model({ "path": ":progs/enforcer.mdl" }) = monster_enforcer : "Enforcer
+
+Default health = 80"
+[
+health(integer) : "Custom health amount"
+]
 */
 void() monster_enforcer =
 {
@@ -394,10 +423,104 @@ void() monster_enforcer =
 	precache_sound2 ("enforcer/sight3.wav");
 	precache_sound2 ("enforcer/sight4.wav");
 
+	if (!self.health)
 	self.health = 80;
 	setsize (self, '-16 -16 -24', '16 16 40');
 	if ( monster_spawnsetup( monster_enforcer_spawner ) ) return;
 	
 	addmonster(1);
 	monster_enforcer_spawn();
+}
+
+
+
+// J_D: The Commando
+
+void() monster_commando_spawn =
+{
+	self.classname = "monster_commando";
+	self.type = "soldier";
+		
+	self.solid = SOLID_SLIDEBOX;
+	//self.movetype = MOVETYPE_STEP;
+
+	setmodel (self, "progs/commando.mdl");
+
+	setsize (self, '-16 -16 -24', '16 16 40');
+	if (!self.health)
+	self.health = 150;
+
+	self.th_stand = enf_stand1;
+	self.th_walk = enf_walk1;
+	self.th_run = enf_run1;
+	self.th_pain = enf_pain;
+	self.th_die = enf_die;
+	self.th_missile = enf_atk1;
+	self.th_checkattack = enforcer_check_attack;
+
+	if (self.deathtype == string_null)
+		self.deathtype = "was eliminated by a Commando";
+
+	walkmonster_start();
+}
+
+void() monster_commando_spawner = {mon_spawner_use(monster_commando_spawn);}
+
+
+/*QUAKED monster_commando (1 0 0) (-16 -16 -24) (16 16 40) AMBUSH ? ? ? TRIGGERED NOTFOG NOTELEFRAG INSTAWAKE
+Commando, 150 health points.
+
+Flags:
+"ambush" only wake up on seeing the player, not another monster getting angry
+"Triggered"	will not spawn until triggered - triggering again will wake him up. Set 'count' to make this a multi-use spawner.
+"NoTfog" 	supress teleport glitter when spawned with 'triggered'
+"NoTelefrag" will silently fail to spawn if doing so would telefrag an existing monster. will try again automatically 2x/second until it succeeds.
+"Instawake" spawn angry at activator
+
+Keys:
+"health" adjusted health amount
+"target" entity to trigger when killed
+"targetname" entity name
+"movedir" set to a velocity to make the monster jump on awakening
+"no_infight" if set to 1 (or higher), this individual won't infight ever (doesn't provoke and isn't provoked)
+*/
+/*FGD
+@PointClass base(Monster) size(-16 -16 -24, 16 16 40) model({ "path": ":progs/commando.mdl" }) = monster_commando : "Commando
+
+Default health = 150"
+[
+health(integer) : "Custom health amount"
+]
+*/
+void() monster_commando =
+{
+	if (!SUB_ShouldSpawn()) return;
+	if (nomonster()) return;
+	if (deathmatch)
+	{
+		remove(self);
+		return;
+	}
+	precache_model2 ("progs/commando.mdl");
+	precache_model2 ("progs/h_mega.mdl");
+	precache_model2 ("progs/c_plasma.mdl");
+
+	precache_sound2 ("enforcer/death1.wav");
+	precache_sound2 ("commando/c_plasma.wav");
+	precache_sound2 ("enforcer/enfstop.wav");
+	precache_sound2 ("enforcer/idle1.wav");
+	precache_sound2 ("enforcer/pain1.wav");
+	precache_sound2 ("enforcer/pain2.wav");
+	precache_sound2 ("enforcer/sight1.wav");
+	precache_sound2 ("enforcer/sight2.wav");
+	precache_sound2 ("enforcer/sight3.wav");
+	precache_sound2 ("enforcer/sight4.wav");
+
+	if (!self.health)
+	self.health = 150;
+	setsize (self, '-16 -16 -24', '16 16 40');
+	if ( monster_spawnsetup( monster_commando_spawner ) ) return;
+	
+	addmonster(1);
+	monster_commando_spawn();
 }

@@ -51,7 +51,7 @@ float() hkCheckCharge =
 	if (!enemy_vis)
 		return FALSE;
 	if (time < self.attack_finished)
-		return FALSE;	
+		return FALSE;
 	if ( fabs(self.origin_z - self.enemy.origin_z) > 32)
 		return FALSE;		// too much height change
 		
@@ -177,7 +177,12 @@ void() hknight_die =
 // check for gib
 	if (self.health < -40)
 	{
-		Gib ("progs/h_hellkn.mdl", self.health);
+		if (self.classname == "monster_hell_baron")
+			Gib ("progs/h_hbaron.mdl", self.health);
+		else if (self.classname == "monster_hell_duke")
+			Gib ("progs/h_hduke.mdl", self.health);
+		else
+			Gib ("progs/h_hellkn.mdl", self.health);
 		return;
 	}
 
@@ -232,7 +237,31 @@ void()	hknight_magicb13 =[	$magicb13,	hknight_run1] {ai_face();}
 void(vector dir, vector org) hknight_bolt =
 {
 	entity spike;
-	if (skill == 3)
+	if (self.classname == "monster_hell_baron" && skill == 3)
+	{
+		spike = launch_projectile(self.origin + org + dir * 20, dir * 650, "knightspike");	// FLYMISSILE
+		SUB_ChangeModel (spike, "progs/k_spike2.mdl");
+		spike.dmg = 18 + 8 * random();
+	}
+	else if (self.classname == "monster_hell_baron")
+	{
+		spike = launch_projectile(self.origin + org + dir * 20, dir * 450, "knightspike");	// FLYMISSILE
+		SUB_ChangeModel (spike, "progs/k_spike.mdl");
+		spike.dmg = 12;
+	}
+	else if (self.classname == "monster_hell_duke" && skill == 3)
+	{
+		spike = launch_projectile(self.origin + org + dir * 20, dir * 700, "knightspike");	// FLYMISSILE
+		SUB_ChangeModel (spike, "progs/dd_spike.mdl");
+		spike.dmg = 20 + 8 * random();
+	}
+	else if (self.classname == "monster_hell_duke")
+	{
+		spike = launch_projectile(self.origin + org + dir * 20, dir * 550, "knightspike");	// FLYMISSILE
+		SUB_ChangeModel (spike, "progs/dd_spike.mdl");
+		spike.dmg = 16 + 4 * random();
+	}
+	else if (skill == 3)
 	{
 		spike = launch_projectile(self.origin + org + dir * 20, dir * 600, "knightspike");	// FLYMISSILE
 		SUB_ChangeModel (spike, "progs/k_spike2.mdl");
@@ -432,14 +461,27 @@ void(entity attacker, float damage)	hknight_pain =
 	if (self.pain_finished > time)
 		return;
 
-	if (skill < 3 && time - self.pain_finished > 5)
+	if (self.classname == "monster_hell_knight" && skill < 3 && time - self.pain_finished > 5)
 	{	// always go into pain frame if it has been a while
 		hknight_pain_go();
 		return;
 	}
 	
-	if ( ( random()*30 > damage ) )
-		return;		// didn't flinch
+	if (self.classname == "monster_hell_baron")
+	{
+		if (random()*150 > damage)
+			return;		// didn't flinch
+	}
+	else if (self.classname == "monster_hell_duke")
+	{
+		if (random()*410 > damage)
+			return;		// didn't flinch
+	}
+	else
+	{
+		if (random()*30 > damage)
+			return;		// didn't flinch
+	}
 
 	hknight_pain_go();
 }
@@ -480,6 +522,8 @@ void() monster_hell_knight_spawn =
 	setmodel (self, "progs/hknight.mdl");
 
 	setsize (self, '-16 -16 -24', '16 16 40');
+	if (!self.health)
+	self.health = 250;
 
 	self.th_stand = hknight_stand1;
 	self.th_walk = hknight_walk1;
@@ -511,12 +555,19 @@ Flags:
 "Instawake" spawn angry at activator
 
 Keys:
+"health" adjusted health amount
 "target" entity to trigger when killed
 "targetname" entity name
 "movedir" set to a velocity to make the monster jump on awakening
+"no_infight" if set to 1 (or higher), this individual won't infight ever (doesn't provoke and isn't provoked)
 */
 /*FGD
-@PointClass base(Monster) size(-16 -16 -24, 16 16 40) model({ "path": ":progs/hknight.mdl" }) = monster_hell_knight : "Death knight" []
+@PointClass base(Monster) size(-16 -16 -24, 16 16 40) model({ "path": ":progs/hknight.mdl" }) = monster_hell_knight : "Death knight
+
+Default health = 250"
+[
+health(integer) : "Custom health amount"
+]
 */
 void() monster_hell_knight =
 {
@@ -545,10 +596,204 @@ void() monster_hell_knight =
 	precache_sound ("knight/sword1.wav");
 	precache_sound ("knight/sword2.wav");
 	
+	if (!self.health)
 	self.health = 250;
 	setsize (self, '-16 -16 -24', '16 16 40');
 	if ( monster_spawnsetup( monster_hell_knight_spawner ) ) return;
 	
 	addmonster(1);
 	monster_hell_knight_spawn();
+}
+
+
+
+// J_D: The Death Baron
+
+void() monster_hell_baron_spawn =
+{
+	self.classname = "monster_hell_baron";
+		
+	self.solid = SOLID_SLIDEBOX;
+	//self.movetype = MOVETYPE_STEP;
+
+	setmodel (self, "progs/hbaron.mdl");
+
+	setsize (self, '-16 -16 -24', '16 16 40');
+	if (!self.health)
+	self.health = 400;
+
+	self.th_stand = hknight_stand1;
+	self.th_walk = hknight_walk1;
+	self.th_run = hknight_run1;
+	self.th_melee = hknight_melee;
+	self.th_missile = hknight_ranged;
+	self.th_pain = hknight_pain;
+	self.th_die = hknight_die;
+	self.th_checkattack = CheckAttack;
+
+	self.type = "brigade";	// no infighting amongst the hell death brigade legion squad
+
+	if (self.deathtype == string_null)
+		self.deathtype = "was vanquished by a Death Baron";
+
+	walkmonster_start ();
+}
+
+void() monster_hell_baron_spawner = {mon_spawner_use(monster_hell_baron_spawn);}
+
+/*QUAKED monster_hell_baron (1 0 0) (-16 -16 -24) (16 16 40) AMBUSH ? ? ? TRIGGERED NOTFOG NOTELEFRAG INSTAWAKE
+"Death" Baron, 400 health points.
+
+Flags:
+"ambush" only wake up on seeing the player, not another monster getting angry
+"Triggered"	will not spawn until triggered - triggering again will wake him up. Set 'count' to make this a multi-use spawner.
+"NoTfog" 	supress teleport glitter when spawned with 'triggered'
+"NoTelefrag" will silently fail to spawn if doing so would telefrag an existing monster. will try again automatically 2x/second until it succeeds.
+"Instawake" spawn angry at activator
+
+Keys:
+"health" adjusted health amount
+"target" entity to trigger when killed
+"targetname" entity name
+"movedir" set to a velocity to make the monster jump on awakening
+"no_infight" if set to 1 (or higher), this individual won't infight ever (doesn't provoke and isn't provoked)
+*/
+/*FGD
+@PointClass base(Monster) size(-16 -16 -24, 16 16 40) model({ "path": ":progs/hbaron.mdl" }) = monster_hell_baron : "Death Baron
+
+Default health = 400"
+[
+health(integer) : "Custom health amount"
+]
+*/
+void() monster_hell_baron =
+{
+	if (!SUB_ShouldSpawn()) return;
+	if (nomonster()) return;
+	if (deathmatch)
+	{
+		remove(self);
+		return;
+	}
+	precache_model2 ("progs/hbaron.mdl");
+	precache_model2 ("progs/k_spike.mdl");
+	precache_model2 ("progs/k_spike2.mdl");
+	precache_model2 ("progs/h_hbaron.mdl");
+
+	
+	precache_sound2 ("hknight/attack1.wav");
+	precache_sound2 ("hknight/death1.wav");
+	precache_sound2 ("hknight/pain1.wav");
+	precache_sound2 ("hknight/sight1.wav");
+	precache_sound ("hknight/hit.wav");		// used by C code, so don't sound2
+	precache_sound2 ("hknight/slash1.wav");
+	precache_sound2 ("hknight/idle.wav");
+	precache_sound2 ("hknight/grunt.wav");
+
+	precache_sound ("knight/sword1.wav");
+	precache_sound ("knight/sword2.wav");
+	
+	if (!self.health)
+	self.health = 400;
+	setsize (self, '-16 -16 -24', '16 16 40');
+	if ( monster_spawnsetup( monster_hell_baron_spawner ) ) return;
+	
+	addmonster(1);
+	monster_hell_baron_spawn();
+}
+
+
+
+// J_D: The Death Duke
+
+void() monster_hell_duke_spawn =
+{
+	self.classname = "monster_hell_duke";
+		
+	self.solid = SOLID_SLIDEBOX;
+	//self.movetype = MOVETYPE_STEP;
+
+	setmodel (self, "progs/hduke.mdl");
+
+	setsize (self, '-16 -16 -24', '16 16 40');
+	if (!self.health)
+	self.health = 1300;
+
+	self.th_stand = hknight_stand1;
+	self.th_walk = hknight_walk1;
+	self.th_run = hknight_run1;
+	self.th_melee = hknight_melee;
+	self.th_missile = hknight_ranged;
+	self.th_pain = hknight_pain;
+	self.th_die = hknight_die;
+	self.th_checkattack = CheckAttack;
+
+	self.type = "brigade";	// no infighting amongst the hell death brigade legion squad
+
+	if (self.deathtype == string_null)
+		self.deathtype = "was defeated by a Death Duke";
+
+	walkmonster_start ();
+}
+
+void() monster_hell_duke_spawner = {mon_spawner_use(monster_hell_duke_spawn);}
+
+/*QUAKED monster_hell_duke (1 0 0) (-16 -16 -24) (16 16 40) AMBUSH ? ? ? TRIGGERED NOTFOG NOTELEFRAG INSTAWAKE
+"Death" Duke, 1300 health points.
+
+Flags:
+"ambush" only wake up on seeing the player, not another monster getting angry
+"Triggered"	will not spawn until triggered - triggering again will wake him up. Set 'count' to make this a multi-use spawner.
+"NoTfog" 	supress teleport glitter when spawned with 'triggered'
+"NoTelefrag" will silently fail to spawn if doing so would telefrag an existing monster. will try again automatically 2x/second until it succeeds.
+"Instawake" spawn angry at activator
+
+Keys:
+"health" adjusted health amount
+"target" entity to trigger when killed
+"targetname" entity name
+"movedir" set to a velocity to make the monster jump on awakening
+"no_infight" if set to 1 (or higher), this individual won't infight ever (doesn't provoke and isn't provoked)
+*/
+/*FGD
+@PointClass base(Monster) size(-16 -16 -24, 16 16 40) model({ "path": ":progs/hduke.mdl" }) = monster_hell_duke : "Death Duke
+
+Default health = 1300"
+[
+health(integer) : "Custom health amount"
+]
+*/
+void() monster_hell_duke =
+{
+	if (!SUB_ShouldSpawn()) return;
+	if (nomonster()) return;
+	if (deathmatch)
+	{
+		remove(self);
+		return;
+	}
+	precache_model2 ("progs/hduke.mdl");
+	precache_model2 ("progs/dd_spike.mdl");
+	precache_model2 ("progs/h_hduke.mdl");
+
+	
+	precache_sound2 ("hknight/attack1.wav");
+	precache_sound2 ("hknight/death1.wav");
+	precache_sound2 ("hknight/pain1.wav");
+	precache_sound2 ("hknight/sight1.wav");
+	precache_sound ("hknight/hit.wav");		// used by C code, so don't sound2
+	precache_sound2 ("hknight/slash1.wav");
+	precache_sound2 ("hknight/idle.wav");
+	precache_sound2 ("hknight/grunt.wav");
+
+	precache_sound ("knight/sword1.wav");
+	precache_sound ("knight/sword2.wav");
+	
+	if (!self.health)
+	self.health = 1300;
+	setsize (self, '-16 -16 -24', '16 16 40');
+	if ( monster_spawnsetup( monster_hell_duke_spawner ) ) return;
+	
+	addmonster(1);
+	monster_hell_duke_spawn();
 }

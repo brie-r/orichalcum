@@ -374,7 +374,7 @@ void() ammo_touch =
 	else
 		// if changed current ammo, update it	
 		SUB_CallAsSelf(W_SetCurrentAmmo, other);
-	
+
 	ItemTouched();
 }
 

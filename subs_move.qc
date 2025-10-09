@@ -168,7 +168,7 @@ void(vector tstart, vector tdest, float tspeed, void() endfn, float invert) SUB_
 		mon.pos2 = tdest;
 		if (invert)
 			mon.customflags |= CFL_INVLIGHT;
-	}	
+	}
 	SUB_CalcMove(tdest, tspeed, endfn);
 }
 

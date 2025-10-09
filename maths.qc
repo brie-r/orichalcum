@@ -355,3 +355,5 @@ vector(vector incident, vector normal, float dampening) reflect = {
 	return reflected - d * dampening * normal;
 };
 
+
+

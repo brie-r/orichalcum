@@ -408,7 +408,7 @@ void() tdeath_touch =
 entity(vector org, entity death_owner) spawn_tdeath =
 {
 	entity death;
-
+	
 	death = spawn();
 	death.classname = "teledeath";
 	death.movetype = MOVETYPE_NONE;

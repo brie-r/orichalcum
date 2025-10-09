@@ -545,7 +545,7 @@ float()	DemonCheckAttack =
 		return TRUE;
 	}
 	
-	if (CheckDemonJump())
+	if (CheckDemonJump() && self.goalentity.classname != "path_angry")
 	{
 		self.attack_state = AS_MISSILE;
 		return TRUE;
@@ -571,6 +571,7 @@ void() monster_demon_spawn =
 
 	//setsize (self, VEC_HULL2_MIN, VEC_HULL2_MAX);
 	setsize (self, VEC_HULL2_MIN, '32 32 40');
+	if (!self.health)
 	self.health = 300;
 	
 	self.yaw_speed = 30;
@@ -604,12 +605,19 @@ Flags:
 "Instawake" spawn angry at activator
 
 Keys:
+"health" adjusted health amount
 "target" entity to trigger when killed
 "targetname" entity name
 "movedir" set to a velocity to make the monster jump on awakening
+"no_infight" if set to 1 (or higher), this individual won't infight ever (doesn't provoke and isn't provoked)
 */
 /*FGD
-@PointClass base(Monster) size(-32 -32 -24, 32 32 64) model({ "path": ":progs/demon.mdl" }) = monster_demon1 : "Fiend" []
+@PointClass base(Monster) size(-32 -32 -24, 32 32 64) model({ "path": ":progs/demon.mdl" }) = monster_demon1 : "Fiend
+
+Default health = 300"
+[
+health(integer) : "Custom health amount"
+]
 */
 void() monster_demon1 =
 {
@@ -631,6 +639,7 @@ void() monster_demon1 =
 	precache_sound ("demon/sight2.wav");
 	precache_sound ("misc/null.wav");
 
+	if (!self.health)
 	self.health = 300;
 	setsize (self, VEC_HULL2_MIN, '32 32 40');
 	if ( monster_spawnsetup( monster_demon_spawner ) ) return;

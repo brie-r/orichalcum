@@ -325,6 +325,7 @@ void() monster_fish_spawn =
 
 	setsize (self, '-16 -16 -16', '16 16 16');
 	//setsize (self, VEC_HULL_MIN, VEC_HULL_MAX);
+	if (!self.health)
 	self.health = 35;
 	self.customflags |= CFL_MELEEONLY;
 	
@@ -364,11 +365,18 @@ Flags:
 "Instawake" spawn angry at activator
 
 Keys:
+"health" adjusted health amount
 "target" entity to trigger when killed
 "targetname" entity name
+"no_infight" if set to 1 (or higher), this individual won't infight ever (doesn't provoke and isn't provoked)
 */
 /*FGD
-@PointClass base(Monster) size(-16 -16 -16, 16 16 16) model({ "path": ":progs/fish.mdl" }) = monster_fish : "Rotfish" []
+@PointClass base(Monster) size(-16 -16 -16, 16 16 16) model({ "path": ":progs/fish.mdl" }) = monster_fish : "Rotfish
+
+Default health = 35"
+[
+health(integer) : "Custom health amount"
+]
 */
 void() monster_fish =
 {
@@ -385,6 +393,7 @@ void() monster_fish =
 	precache_sound2 ("fish/bite.wav");
 	precache_sound2 ("fish/idle.wav");
 
+	if (!self.health)
 	self.health = 35;
 	setsize (self, '-16 -16 -16', '16 16 16');
 	setorigin(self,self.origin - '0 0 8');

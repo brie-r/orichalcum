@@ -355,7 +355,7 @@ void() skillbutton_go_down =
 void() skillbutton_hit_bottom =
 {
 	self.state = STATE_BOTTOM;
-	self.frame = 0;	
+	self.frame = 0;
 	bmodel_lightstyle(self, 1);
 	if (self.max_health)
 	{
@@ -475,7 +475,7 @@ Alt Target Pattern: 'target' when touched, 'target2' when fully depressed, 'targ
 		}
 		bmodel_lightstyle(self, 1);
 	}
-	
+
 	self.state = STATE_BOTTOM;
 	self.movetype = MOVETYPE_PUSH;
 	self.solid = SOLID_BSP;
