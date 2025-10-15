@@ -320,13 +320,13 @@ void() W_FireLightning =
 	}
 	self.punchangle_x = -2;
 
-	self.currentammo = self.ammo_cells = self.ammo_cells - 1;
+	self.currentammo = self.ammo_cells = self.ammo_cells - cvar("w_lightninggun_ammo_cost");
 	org = self.origin + '0 0 16'+ v_forward * 8;
 	
 	traceline2(org, org + v_forward * 720, self, TRACE_NOMONSTERS);
 
 	ClearMultiDamage();
-	LightningBeam(org, trace_endpos + v_forward * 8, self, 30);
+	LightningBeam(org, trace_endpos + v_forward * 8, self, CvarWithSpread("lightninggun", "dmg"));
 	ApplyMultiDamage(DMGTYPE_LIGHTNING);
 	
 /*	WriteByte (MSG_BROADCAST, SVC_TEMPENTITY);

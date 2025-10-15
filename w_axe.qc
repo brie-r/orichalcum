@@ -60,7 +60,7 @@ void() W_AxeSwing =
 	W_AxeWhiffSound();
 		self.weaponframe = 10 * (floor(4.99 * random()));
 		self.touch_time = time + 0.1;
-		self.attack_finished = time + 0.49;
+		self.attack_finished = time + cvar("w_axe_attack_delay");
 	self.think1 = player_axe;
 	W_AxeThink();
 }
@@ -93,7 +93,7 @@ void() W_FireAxe =
 	{
 		trace_ent.customflags = trace_ent.customflags | CFL_AXEHITME;
 		SpawnBlood (org, '0 0 0', 20);
-		T_Damage (trace_ent, self, self, 24, DMGTYPE_MELEE);
+		T_Damage (trace_ent, self, self, CvarWithSpread("axe", "dmg"), DMGTYPE_MELEE);
 		
 		if (trace_ent.flags & FL_MONSTER)
 		{

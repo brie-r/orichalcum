@@ -1,10 +1,10 @@
 ../progs.dat
 #pragma autoproto
+// #pragma target fte
 //#define NO_CSQC 1		// uncomment for a CSQC-less build
 
 defs.qc
 constants.qc
-cvars.qc
 
 maths.qc
 utility.qc
@@ -84,3 +84,4 @@ m_drone.qc  // Drone
 rubicon2.qc //selections from Rubicon2 QC, from progs_dump
 
 test.qc
+cvars.qc

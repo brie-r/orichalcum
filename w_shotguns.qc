@@ -59,7 +59,7 @@ Used by shotgun, super shotgun, and enemy soldier firing
 */
 void(float shotcount, vector dir, vector spread) FireBullets =
 {
-	vector src, direction;
+	vector src, dir_with_spread;
 	entity ig;
 	float s, lim;
 	
@@ -72,7 +72,7 @@ void(float shotcount, vector dir, vector spread) FireBullets =
 	{
 		src = self.origin + v_forward*10;
 		src_z = self.absmin_z + self.size_z * 0.7;
-		direction = SpreadVector(dir, spread);
+		dir_with_spread = SpreadVector(dir, spread);
 		
 		if (trace_debug) dprint("* firing a bullet *\n");
 		
@@ -80,7 +80,7 @@ void(float shotcount, vector dir, vector spread) FireBullets =
 		// check for trace-through cases
 		for (ig = self; ig != world; lim++)	// ig == world if we hit a wall or hit nothing
 		{
-			traceline2(src, src + direction*2048, ig, 0);
+			traceline2(src, src + dir_with_spread*2048, ig, 0);
 			
 			if (trace_ent == self)
 				return;	// some notrace shit happened
@@ -96,11 +96,11 @@ void(float shotcount, vector dir, vector spread) FireBullets =
 				//( trace_ent.solid == SOLID_BBOX || trace_ent.solid == SOLID_SLIDEBOX ) &&	
 				HasBeenShotToDeath(trace_ent) )
 			{
-				BulletImpact (2+2*random(), direction);
+				BulletImpact(CvarWithSpread ("shotgun", "dmgA"), dir_with_spread);
 
 				// start 0.1 unit forward, or else when shooting an adjacent enemy we'll
 				// just hit ourselves again
-				src = trace_endpos + direction * 0.1;
+				src = trace_endpos + dir_with_spread * 0.1;
 				ig = trace_ent;
 				if (trace_debug) dprint3("bullet hit ", ig.classname, ", continuing thru\n");
 			}
@@ -118,7 +118,7 @@ void(float shotcount, vector dir, vector spread) FireBullets =
 		
 		if (trace_fraction != 1.0)
 		{
-			BulletImpact (4, direction);
+			BulletImpact(CvarWithSpread("shotgun", "dmgB"), dir_with_spread);
 		}
 		
 		if (trace_debug) dprint("bullet is over\n\n");
@@ -133,7 +133,7 @@ W_FireShotgun
 void() W_FireShotgun =
 {
 	local vector dir;
-	
+	vector spread = cvar_vec("w_shotgun_spread_vec");
 	// for ai_nav:
 	/*if (nav_w_nodeLink())
 	{
@@ -146,12 +146,12 @@ void() W_FireShotgun =
 	self.punchangle_x = -2;
 	makevectors(self.v_angle);
 	
-	self.currentammo = self.ammo_shells = self.ammo_shells - 1;
+	self.currentammo = self.ammo_shells = self.ammo_shells - cvar("w_shotgun_ammo_cost");
 	dir = aim (self, AUTOAIM_DIST);
 
 	ClearMultiDamage ();
-	FireBullets (6, dir, '0.04 0.04 0');
-	self.attack_finished = time + 0.5;
+	FireBullets (cvar("w_shotgun_shot_count"), dir, spread);
+	self.attack_finished = time + cvar("w_shotgun_attack_delay");
 	
 	ApplyMultiDamage ();
 }
@@ -179,19 +179,18 @@ void() W_FireSuperShotgun =
 			W_FireShotgun ();
 		return;
 	}
-		
-	sound (self ,CHAN_WEAPON, "weapons/shotgn2.wav", 1, ATTN_NORM);	
+	
+	sound (self, CHAN_WEAPON, "weapons/shotgn2.wav", 1, ATTN_NORM);	
 
 	self.punchangle_x = -4;
 	
-	self.currentammo = self.ammo_shells = self.ammo_shells - 2;
+	self.currentammo = self.ammo_shells = self.ammo_shells - cvar("w_supershotgun_ammo_cost");
 	dir = aim (self, AUTOAIM_DIST);
 
 	ClearMultiDamage ();
 
-	FireBullets (14, dir, '0.14 0.08 0');
-	self.attack_finished = time + 0.7;
+	FireBullets (cvar("w_supershotgun_shot_count"), dir, cvar_vec("w_supershotgun_spread_vec"));
+	self.attack_finished = time + cvar("w_supershotgun_attack_delay");
 	
 	ApplyMultiDamage ();
-
 }

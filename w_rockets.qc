@@ -43,7 +43,7 @@ void() T_ExplosiveTouch =
 void() T_MissileExplode =
 {
 	local float	damg;
-	damg = 120;
+	damg = cvar("w_rocketlauncher_dmg") + cvar("w_rocketlauncher_dmg") * random();
 	
 	if (other.health)
 	{
@@ -82,7 +82,7 @@ void() W_FireRocket =
 	local entity missile;
 	local vector loc;
 	
-	self.currentammo = self.ammo_rockets = self.ammo_rockets - 1;
+	self.currentammo = self.ammo_rockets = self.ammo_rockets - cvar("w_rocketlauncher_ammo_cost");
 	
 	sound (self, CHAN_WEAPON, "weapons/sgun1.wav", 1, ATTN_NORM);
 
@@ -91,8 +91,10 @@ void() W_FireRocket =
 	makevectors (self.v_angle);
 	loc = self.origin + v_forward * 8 + '0 0 16';
 	
-		missile = launch_rocket( loc, v_forward * cvar("w_rocket_speed") );
-		self.attack_finished = time + 0.6;
+	float speed = CvarWithSpread("rocket", "speed");
+
+	missile = launch_rocket(loc, v_forward * speed);
+	self.attack_finished = time + cvar("w_rocketlauncher_attack_delay");
 }
 
 //=============================================================================
@@ -107,7 +109,8 @@ GERNADES
 
 void() GrenadeExplode =
 {
-	T_RadiusDamage (self, self.trueowner, 120, world, DMGTYPE_EXPLOSION);
+	float dmg = CvarWithSpread("grenade", "dmg");
+	T_RadiusDamage (self, self.trueowner, dmg, world, DMGTYPE_EXPLOSION);
 	//T_GibDownedZombies (self, 120);
 	
 	BecomeExplosion ();
@@ -145,13 +148,13 @@ void() W_FireGrenade =
 	float base;
 	vector gvel;
 	
-	self.currentammo = self.ammo_rockets = self.ammo_rockets - 1;
+	self.currentammo = self.ammo_rockets = self.ammo_rockets - cvar("w_grenadelauncher_ammo_cost");
 	sound (self, CHAN_WEAPON, "weapons/grenade.wav", 1, ATTN_NORM);
 	self.punchangle_x = -2;
 
 	// set grenade speed	
 	makevectors (self.v_angle);
-	base = 200;
+	base = CvarWithSpread("grenade", "speed");
 	if (self.v_angle_x)
 		gvel = v_forward * base * 3 + v_up * base + crandom() * v_right * 10 + crandom() * v_up * 10;
 	else
@@ -162,7 +165,7 @@ void() W_FireGrenade =
 	}
 	
 	g = launch_grenade(self.origin, gvel);
-	self.attack_finished = time + 0.6;
+	self.attack_finished = time + cvar("w_grenadelaucher_attack_delay");
 	g.touch = GrenadeTouch;
 	g.th_die = GrenadeExplode;
 }

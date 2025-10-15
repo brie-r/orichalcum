@@ -33,12 +33,16 @@ vector(vector muzzle) W_SpikeOrigin =
 
 vector(vector fwd, float spread) W_SpikeDir =
 {
-	return normalize(fwd + (2 * v_right * crandom() + v_up * crandom()) * spread / 100);
+	return normalize(fwd + (2 * v_right * crandom() + v_up * crandom()) * spread);
 }
 
 void() W_FireNailgun =
 {
+
+	// TODO: nail spread here
+
 	vector offset, v, org, dir;
+	float speed;
 	// remember sv_aim
 	dir = aim( self, AUTOAIM_DIST );
 	v = vectoangles( dir );
@@ -46,17 +50,17 @@ void() W_FireNailgun =
 	makevectors( v );
 
 	sound (self, CHAN_WEAPON, "weapons/rocket1i.wav", 1, ATTN_NORM);
-	self.currentammo = self.ammo_nails = self.ammo_nails - 1;
+	self.currentammo = self.ammo_nails = self.ammo_nails - cvar("w_nailgun_ammo_cost");
 	offset = VEC_ORIGIN;
 	if ( mod( self.cnt, 2 ) ) offset_x = -2.5;
-	else offset_x = 2.5;	
+	else offset_x = 2.5;
 
 	org = W_SpikeOrigin(offset);
-
+	speed = CvarWithSpread("nail", "speed");
 	// default sv_maxvelocity is 2000, any higher leads to weird 
 	// angular offsets caused by clamping the velocity
-	launch_nail(org, dir * 1996);
-	self.attack_finished += 0.09;
+	launch_nail(org, dir * speed);
+	self.attack_finished += cvar("w_nailgun_attack_delay");
 }
 
 void() spike_unfatten = { self.movetype = MOVETYPE_FLY; }
@@ -65,16 +69,23 @@ void() W_FirePerforator =
 {
 	vector offset;
 	sound (self, CHAN_WEAPON, "weapons/spike2.wav", 1, ATTN_NORM);
-	self.currentammo = self.ammo_nails = self.ammo_nails - 2;
+	self.currentammo = self.ammo_nails = self.ammo_nails - cvar("w_perforator_ammo_cost");
 	
 	if (mod(self.cnt, 4) == 0) offset = '0 0 1.25';
 	else if (mod(self.cnt, 4) == 1) offset = '1 0 1';
 	else if (mod(self.cnt, 4) == 2) offset = '1.25 0 0';
 	else if (mod(self.cnt, 4) == 3) offset = '1 0 -1';
-	
+
+	float spread1 = cvar("w_perforator_spread1");
+	float spread2 = cvar("w_perforator_spread2");
+	float speed1 = CvarWithSpread("perforator_nail", "speed1");
+	float speed2 = CvarWithSpread("perforator_nail", "speed2");
+	vector dir1 = W_SpikeDir(v_forward, spread1);
+	vector dir2 = W_SpikeDir(v_forward, spread2);
+
 	entity spike1, spike2;
-	spike1 = launch_nail(W_SpikeOrigin(offset), W_SpikeDir(v_forward, 2) * (940 + random()*30));
-	spike2 = launch_nail(W_SpikeOrigin(-offset), W_SpikeDir(v_forward, 2) * (1020 + random()*30));
+	spike1 = launch_nail(W_SpikeOrigin(offset), dir1 * speed1);
+	spike2 = launch_nail(W_SpikeOrigin(offset), dir2 * speed2);
 
 	// weaken the SNG at long distance while keeping the spread under control
 	spike1.think = spike_unfatten;
@@ -82,7 +93,7 @@ void() W_FirePerforator =
 	spike1.nextthink = time + 0.25;
 	spike2.nextthink = time + 0.3;
 	
-	self.attack_finished += 0.09;
+	self.attack_finished += cvar("w_perforator_attack_delay");
 	
 	if (has_quad(self))
 	{
@@ -93,10 +104,10 @@ void() W_FirePerforator =
 		
 		// the dumb solution is to make one nail do 0 dmg and the other do 18 in quad mode
 		//   so the math works out like the old math and the quad SNG still feels right
-		spike2.dmg = 18;
-		spike1.dmg = 18;
-		spike2.buddy = spike1;
-		spike1.buddy = spike2;
+		spike1.dmg = CvarWithSpread("perforator", "dmg1");
+		spike2.dmg = CvarWithSpread("perforator", "dmg2");
+		spike1.buddy = spike1;
+		spike2.buddy = spike2;
 		// first one to hit does its damage and then nerfs its 'buddy'
 	}
 }
