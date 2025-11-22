@@ -48,6 +48,7 @@ void() W_Precache =
 	precache_model ("progs/v_shot2.mdl");
 	precache_model ("progs/v_nail2.mdl");
 	precache_model ("progs/v_rock2.mdl");
+	// precache_model ("progs/g_claw.mdl");
 	precache_model ("progs/v_light.mdl");
 
 }
@@ -378,6 +379,7 @@ void() W_ResetWeaponState =
 		self.weaponmodel = "progs/v_rock.mdl";
 	else if (self.weapon == IT_ROCKET_LAUNCHER)
 		self.weaponmodel = "progs/v_rock2.mdl";
+		// self.weaponmodel = "progs/g_claw.mdl";
 	else if (self.weapon == IT_LIGHTNING)
 		self.weaponmodel = "progs/v_light.mdl";
 	else
@@ -427,7 +429,7 @@ void() W_Attack =
 {
 	if (self.weapon && !W_HasAmmo(self.weapon))
 	{
-		W_SelectBestWeapon();
+		//W_SelectBestWeapon();
 		if (!self.weapon || self.weapon == IT_AXE)
 		{
 			sprint (self, "not enough ammo.\n");
@@ -449,36 +451,28 @@ void() W_Attack =
 	// moved after axe so that silent swings don't wake monsters
 	self.show_hostile = time + 1;
 	
-	if (self.weapon == IT_SHOTGUN)
-	{
-		player_shot1 ();
-		W_FireShotgun ();
+	if (self.weapon == IT_SHOTGUN) {
+		w_fire(b_shotgun);
 	}
-	else if (self.weapon == IT_SUPER_SHOTGUN)
-	{
-		player_shot1 ();
-		W_FireSuperShotgun ();
+	else if (self.weapon == IT_SUPER_SHOTGUN) {
+		w_fire(b_supershotgun);
 	}
 	else if (self.weapon == IT_NAILGUN || self.weapon == IT_SUPER_NAILGUN)
 	{
 		player_nail();
 		W_FireSpikes ();
 	}
-	else if (self.weapon == IT_GRENADE_LAUNCHER)
-	{
-		player_rocket1();
-		W_FireGrenade();
+	else if (self.weapon == IT_GRENADE_LAUNCHER) {
+		w_fire(b_grenadelauncher);
 	}
-	else if (self.weapon == IT_ROCKET_LAUNCHER)
-	{
-		player_rocket1();
-		W_FireRocket();
+	else if (self.weapon == IT_ROCKET_LAUNCHER) {
+		w_fire(b_rocketlauncher);
 	}
 
 	else if (self.weapon == IT_LIGHTNING)
 	{
 		player_light1();
-		self.attack_finished = time + cvar("w_lightninggun_attack_delay");
+		self.attack_finished = time + wcvar("lightninggun", "attack_delay");
 		sound (self, CHAN_AUTO, "weapons/lstart.wav", 1, ATTN_NORM);
 	}
 }

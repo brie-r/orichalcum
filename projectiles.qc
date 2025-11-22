@@ -244,7 +244,12 @@ float() projectile_valid_passthru =
 			return other.notrace;
 		return TRUE;
 	}
-	
+	// pass through teammates
+	if (self.classname == "player" && other.classname == "player")
+	{
+		if (teamplay && (other.team > 0) && (other.team == self.owner.team)) return TRUE;
+		if (coop && other != self.owner) return TRUE;
+	}
 	if (other.deadflag == DEAD_DYING || // corpses not yet on the ground
 		other.notrace  || 				// specially marked (monsterclip)
 		invis_miss_check(other,self.origin,self.velocity) || 
@@ -475,17 +480,17 @@ entity(vector org, vector vel) launch_plasma =
 
 /*
 ========
-launch_rocket
+launch_rockets
 basic missile, used by player and ogre rocket fire
 ========
 */
-entity(vector org, vector vel) launch_rocket =
+entity(vector org, vector vel, float shot_count, void() fn_touch) launch_rockets =
 {
 	entity missile;
 	
 	missile = launch_projectile(org, vel, "rocket");	// FLYMISSILE
 	missile.dmg = 100;
-	missile.touch = T_MissileTouch;
+	missile.touch = fn_touch;
 	missile.type = "missile";
 	
 	SUB_ChangeModel (missile, "progs/missile.mdl");
@@ -499,11 +504,11 @@ launch_lavamissile
 exploding cthon lavaball
 ========
 */
-entity(vector org, vector vel) launch_lavamissile =
+entity(vector org, vector vel, void() fn_touch) launch_lavamissile =
 {
 	entity missile;
 	
-	missile = launch_rocket(org, vel);	// FLYMISSILE
+	missile = launch_rockets(org, vel, 1, fn_touch);	// FLYMISSILE
 	missile.classname = "lavaball";
 	missile.avelocity = '200 200 200';
 	SUB_ChangeModel (missile, "progs/lavaball.mdl");

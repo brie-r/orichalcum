@@ -262,12 +262,11 @@ void(vector p) boss_missile =
 	
 	vec = normalize (dir);
 
-	missile = launch_lavamissile (org, vec*spd);
+	missile = launch_lavamissile (org, vec*spd, boss_missile_touch);
 	missile.avelocity = '200 100 300';
 	missile.dmg = 100;
 	missile.think = boss_missile_think;
 	missile.nextthink = time;
-	missile.touch = boss_missile_touch;
 	sound (self, CHAN_WEAPON, "boss1/throw.wav", 1, ATTN_NORM);
 
 	// check for dead enemy

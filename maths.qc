@@ -3,6 +3,11 @@
 // ===================
 
 float mathlib_accuracy; //accuracy of sqrt & pow
+float DEG2RAD = 0.0174532925199432957692369076848861271344287188854172545609719144;
+float RAD2DEG = 57.2957795130823208767981548141051703324054724665643215491602438612;
+float PI      = 3.1415926535897932384626433832795028841971693993751058209749445923;
+// AKA 2 PI
+float TAU	  = 6.2831853071795864769252867665590057683943387987502116419498891846;
 
 // frikqcc doesn't like it when i swizzle directly
 // TODO: see if fteqcc cares
@@ -211,6 +216,10 @@ vector(vector a, vector b) vec_scale =
 {
 	return Vector(a_x * b_x, a_y * b_y, a_z * b_z);
 }
+vector(vector a, vector b, vector c) vec_scale3 =
+{
+	return Vector(a_x * b_x * c_x, a_y * b_y * c_y, a_z * b_z * c_z);
+}
 
 float(vector ang) is_angular =
 {
@@ -354,6 +363,19 @@ vector(vector incident, vector normal, float dampening) reflect = {
 
 	return reflected - d * dampening * normal;
 };
+vector (vector spread) cone_spread {
+	float rotation = random() * TAU;
+	vector circle = Vector(0, cos(rotation), sin(rotation));
+	float pitch = random() * sin(spread_y * DEG2RAD * random());
+	vector vec_2d = rotateVectorAround(circle, '1 0 0', rotation);
+	float fwd = sqrt(1 - pow(circle_x, 2) - pow(circle_y, 2));
+	vector vec_3d = Vector(vec_2d_y, vec_2d_x, fwd);
+	return vec_3d;
 
 
-
+	// spread * 0.5 * DEG2RAD * crandom();
+	// vector relative = spread * 0.5 * random();
+	// vector rotation = 360 * random;
+	// pow()
+	
+}

@@ -403,9 +403,8 @@ void() MagmaBall =
 	}
 
 	sound (self, CHAN_WEAPON, "boss1/throw.wav", 1, ATTN_NORM);
-	missile = launch_lavamissile (org, vec * 900);
+	missile = launch_lavamissile (org, vec * 900, hurler_missile_touch);
 	missile.avelocity = '200 100 300';
-	missile.touch = hurler_missile_touch;
 }
 
 void() sham_proj1     =[      $smash1,       sham_proj2    ] {ai_face();self.lip = 0;}

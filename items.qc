@@ -463,7 +463,7 @@ float SPAWN_TGTITEMS_MIN = 16;
 		2 : "Super Shotgun" : 0
 		4 : "Nailgun" : 0
 		8 : "Perforator" : 0
-		16 : "Grenade Laucher" : 0
+		16 : "Grenade Launcher" : 0
 		32 : "Rocket Launcher" : 0
 		64 : "Lightning Gun" : 0
 		4096 : "Axe" : 0
@@ -921,7 +921,7 @@ Spawnflag Usage:
 		2 : "Super Shotgun"
 		4 : "Nailgun"
 		8 : "Perforator"
-		16 : "Grenade Laucher"
+		16 : "Grenade Launcher"
 		32 : "Rocket Launcher"
 		64 : "Lightning Gun"
 		4096 : "Axe"

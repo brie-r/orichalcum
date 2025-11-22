@@ -11,10 +11,10 @@ float	ITEM_AMMO_BIG = 1;
 
 void(entity e) bound_ammo =
 {
-	e.ammo_shells = min(e.ammo_shells, MAX_AMMO_SHELLS);
-	e.ammo_nails = min(e.ammo_nails, MAX_AMMO_NAILS);
-	e.ammo_rockets = min(e.ammo_rockets, MAX_AMMO_ROCKETS);
-	e.ammo_cells = min(e.ammo_cells, MAX_AMMO_CELLS);
+	e.ammo_shells = min(e.ammo_shells, cvar("w_shells_max_ammo"));
+	e.ammo_nails = min(e.ammo_nails, cvar("w_nails_max_ammo"));
+	e.ammo_rockets = min(e.ammo_rockets, cvar("w_rockets_max_ammo"));
+	e.ammo_cells = min(e.ammo_cells, cvar("w_cells_max_ammo"));
 }
 
 /*
@@ -268,6 +268,8 @@ void() weapon_rocketlauncher =
 	if (!SUB_ShouldSpawn()) return;
 	precache_model_safe ("progs/g_rock2.mdl");
 	setmodel (self, "progs/g_rock2.mdl");
+	// precache_model_safe ("progs/g_claw.mdl");
+	// setmodel (self, "progs/g_claw.mdl");
 	self.items = IT_ROCKET_LAUNCHER;
 	self.ammo_rockets = 5;
 	self.netname = "Rocket Launcher";
@@ -336,25 +338,25 @@ void() ammo_touch =
 	// structured in dual if's instead of using && to preserve ammo_touch maphacks
 	if (self.ammo_shells)
 	{
-		if (other.ammo_shells < MAX_AMMO_SHELLS)
+		if (other.ammo_shells < cvar("w_shells_max_ammo"))
 			other.ammo_shells += self.ammo_shells;
 		else return;
 	}
 	else if (self.ammo_nails)
 	{
-		if (other.ammo_nails < MAX_AMMO_NAILS)
+		if (other.ammo_nails < cvar("w_nails_max_ammo"))
 			other.ammo_nails += self.ammo_nails;
 		else return;
 	}
 	else if (self.ammo_rockets)
 	{
-		if (other.ammo_rockets < MAX_AMMO_ROCKETS)
+		if (other.ammo_rockets < cvar("w_rockets_max_ammo"))
 			other.ammo_rockets += self.ammo_rockets;
 		else return;
 	}
 	else if (self.ammo_cells)
 	{
-		if (other.ammo_cells < MAX_AMMO_CELLS)
+		if (other.ammo_cells < cvar("w_cells_max_ammo"))
 			other.ammo_cells += self.ammo_cells;
 		else return;
 	}

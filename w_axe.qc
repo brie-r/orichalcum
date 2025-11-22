@@ -21,7 +21,6 @@ void() W_AxeHitSound =
 		sound (self, CHAN_WEAPON, "weapons/axhit2.wav", 1, ATTN_NORM);
 }
 
-
 void(float foff) W_AxeCycle =
 {
 	// lip and touch_time are overloaded on the player for animation event timing
@@ -93,7 +92,7 @@ void() W_FireAxe =
 	{
 		trace_ent.customflags = trace_ent.customflags | CFL_AXEHITME;
 		SpawnBlood (org, '0 0 0', 20);
-		T_Damage (trace_ent, self, self, CvarWithSpread("axe", "dmg"), DMGTYPE_MELEE);
+		T_Damage (trace_ent, self, self, wcvar_spread("axe", "dmg"), DMGTYPE_MELEE);
 		
 		if (trace_ent.flags & FL_MONSTER)
 		{

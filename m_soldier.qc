@@ -310,7 +310,9 @@ void() army_fire =
 
 	// lunaran: moved multidamage here
 	ClearMultiDamage ();
-	FireBullets (4, dir, '0.1 0.1 0');
+	// w_fire(b_soldiershotgun);
+	w_ctx = b_soldiershotgun;
+	fire_bullet (dir);
 	ApplyMultiDamage ();
 }
 
@@ -363,8 +365,8 @@ void() rocketeer_missile_touch =
 
 void() rocketeer_fire =
 {
-	vector org, vec;
-	entity missile;
+	vector org, dir;
+	local float speed;
 
 	ai_face();
 	self.effects = self.effects | EF_MUZZLEFLASH;
@@ -373,21 +375,22 @@ void() rocketeer_fire =
 	self.punchangle_x = -2;
 
 	org = soldierguy_muzzle_org();
-    vec = normalize(enemy_vispos() - org + enemy_aim_vertical());
+    dir = normalize(enemy_vispos() - org + enemy_aim_vertical());
 	makevectors (self.angles);
 
 	if (angledif(self.ideal_yaw, self.angles_y) > 80)	// no ass rockets
 	{
-		vec_x = v_forward_x;
-		vec_y = v_forward_y;
-		vec = normalize(vec);
+		dir_x = v_forward_x;
+		dir_y = v_forward_y;
+		dir = normalize(dir);
 	}
 
+
 	if (skill == 3)
-		missile = launch_rocket (org, vec * 900);
+		speed = 900;
 	else
-		missile = launch_rocket (org, vec * 800);
-	missile.touch = rocketeer_missile_touch;
+		speed = 800;
+	launch_rockets (org, dir * speed, 1, rocketeer_missile_touch);
 }
 
 

@@ -326,7 +326,7 @@ void() W_FireLightning =
 	traceline2(org, org + v_forward * 720, self, TRACE_NOMONSTERS);
 
 	ClearMultiDamage();
-	LightningBeam(org, trace_endpos + v_forward * 8, self, CvarWithSpread("lightninggun", "dmg"));
+	LightningBeam(org, trace_endpos + v_forward * 8, self, wcvar_spread("lightninggun", "dmg"));
 	ApplyMultiDamage(DMGTYPE_LIGHTNING);
 	
 /*	WriteByte (MSG_BROADCAST, SVC_TEMPENTITY);

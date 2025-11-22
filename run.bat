@@ -1,0 +1,1 @@
+D:\Games\vkQuake\vkQuake.exe -multiuser -basedir "D:\SteamLibrary\steamapps\common\Quake\rerelease" -game orichalcum

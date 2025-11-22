@@ -405,6 +405,9 @@ void() worldspawn =
 
 	precache_model ("progs/zom_gib.mdl");
 	
+	// precache particles
+	p_hit_inanimate = particleeffectnum("TE_BULLET_WALL");
+	p_hit_flesh = particleeffectnum("TE_BULLET_FLESH");
 }
 
 void() StartFrame =

@@ -28,10 +28,10 @@ void() Cheat_Items =
 	if(deathmatch || coop)
 		return;
 
-	self.ammo_shells = MAX_AMMO_SHELLS;
-	self.ammo_nails = MAX_AMMO_NAILS;
-	self.ammo_rockets = MAX_AMMO_ROCKETS;
-	self.ammo_cells = MAX_AMMO_CELLS;
+	self.ammo_shells = cvar("w_shells_max_ammo");
+	self.ammo_nails = cvar("w_nails_max_ammo");
+	self.ammo_rockets = cvar("w_rockets_max_ammo");
+	self.ammo_cells = cvar("w_cells_max_ammo");
 	
 	self.items = self.items |
 	//	IT_KEY1 | IT_KEY2 | 

@@ -220,7 +220,7 @@ void(vector start, vector mins, vector maxs, vector end, float nomonsters, entit
 		Exactly like traceline, but a box instead of a uselessly thin point. Acceptable sizes are limited by bsp format, q1bsp has strict acceptable size values. */
 
 vector() randomvec = #91; /*
-		Returns a vector with random values. Each axis is independantly a value between -1 and 1 inclusive. */
+		Returns a vector with random values. Each axis is independently a value between -1 and 1 inclusive. */
 
 vector(vector org) getlight = #92;
 float(string cvarname, string defaultvalue) registercvar = #93; /*

@@ -648,18 +648,21 @@ void() lavaball_fly =
 {
 	entity fireball;
 	vector vel;
+	void() fn_touch;
 	vel = self.movedir * self.speed;
 	vel_x += crandom() * self.mangle_x;
 	vel_y += crandom() * self.mangle_y;
 	vel_z += crandom() * self.mangle_z;
-
-	fireball = launch_lavamissile(self.origin, vel);
+	if (!(self.spawnflags & 4))
+		fn_touch = lavaball_touch;
+	else
+		fn_touch = T_MissileTouch; // TODO: could be wrong
+	fireball = launch_lavamissile(self.origin, vel, fn_touch);
 	fireball.movetype = MOVETYPE_TOSS;
 	
 	fireball.classname = "fireball";
 
-	if (!(self.spawnflags & 4))
-		fireball.touch = lavaball_touch;
+
 	fireball.dmg = self.dmg;
 }
 

@@ -1,4 +1,4 @@
-../progs.dat
+./progs.dat
 #pragma autoproto
 // #pragma target fte
 //#define NO_CSQC 1		// uncomment for a CSQC-less build
@@ -24,6 +24,7 @@ item_backpack.qc
 
 projectiles.qc
 weapons.qc
+w_common.qc
 w_axe.qc
 w_lightning.qc
 w_shotguns.qc

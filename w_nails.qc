@@ -31,9 +31,10 @@ vector(vector muzzle) W_SpikeOrigin =
 			muzzle_z * v_up);
 }
 
-vector(vector fwd, float spread) W_SpikeDir =
+vector(vector fwd, vector spread) W_SpikeDir =
 {
-	return normalize(fwd + (2 * v_right * crandom() + v_up * crandom()) * spread);
+	// TODO: untested
+	return normalize(fwd + vec_scale(2 * v_right * crandom() + v_up * crandom(), spread));
 }
 
 void() W_FireNailgun =
@@ -56,7 +57,7 @@ void() W_FireNailgun =
 	else offset_x = 2.5;
 
 	org = W_SpikeOrigin(offset);
-	speed = CvarWithSpread("nail", "speed");
+	speed = wcvar_spread("nail", "speed");
 	// default sv_maxvelocity is 2000, any higher leads to weird 
 	// angular offsets caused by clamping the velocity
 	launch_nail(org, dir * speed);
@@ -76,12 +77,12 @@ void() W_FirePerforator =
 	else if (mod(self.cnt, 4) == 2) offset = '1.25 0 0';
 	else if (mod(self.cnt, 4) == 3) offset = '1 0 -1';
 
-	float spread1 = cvar("w_perforator_spread1");
-	float spread2 = cvar("w_perforator_spread2");
-	float speed1 = CvarWithSpread("perforator_nail", "speed1");
-	float speed2 = CvarWithSpread("perforator_nail", "speed2");
-	vector dir1 = W_SpikeDir(v_forward, spread1);
-	vector dir2 = W_SpikeDir(v_forward, spread2);
+	vector spread1 = wcvar_vec("perforator", "spread1");
+	vector spread2 = wcvar_vec("perforator", "spread2");
+	float speed1 = wcvar_spread("perforator_nail", "speed1");
+	float speed2 = wcvar_spread("perforator_nail", "speed2");
+	vector dir1 = SpreadOval(v_forward, spread1);
+	vector dir2 = SpreadOval(v_forward, spread2);
 
 	entity spike1, spike2;
 	spike1 = launch_nail(W_SpikeOrigin(offset), dir1 * speed1);
@@ -104,8 +105,8 @@ void() W_FirePerforator =
 		
 		// the dumb solution is to make one nail do 0 dmg and the other do 18 in quad mode
 		//   so the math works out like the old math and the quad SNG still feels right
-		spike1.dmg = CvarWithSpread("perforator", "dmg1");
-		spike2.dmg = CvarWithSpread("perforator", "dmg2");
+		spike1.dmg = wcvar_spread("perforator", "dmg1");
+		spike2.dmg = wcvar_spread("perforator", "dmg2");
 		spike1.buddy = spike1;
 		spike2.buddy = spike2;
 		// first one to hit does its damage and then nerfs its 'buddy'

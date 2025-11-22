@@ -1,196 +1,160 @@
-/*
-===============
+const b_weapon b_shotgun = {
+	.name = "shotgun",
+	.fn_fire = fire_bullet,
+	.fn_vfx = player_shot1,
 
-BULLETS
-
-sg:		6 * 4 = 24		/ 48 / 72 / 96 / 120
-ssg:	14 * 4 = 56		/ 112 / 168 / 224 / 280
-
-sg:		5 * 5 = 25		/ 50 / 75 / 100 / 125
-ssg:	11 * 5 = 55		/ 110 / 165 / 220 / 275
-ssg:	12 * 5 = 60		/ 120 / 180 / 240 / 300
-
-===============
-*/
-
-vector(vector dir, vector spread) SpreadVector = 
-{
-	return dir + crandom()*spread_x*v_right + crandom()*spread_y*v_up;
-}
-
-/*
-================
-BulletImpact
-Go to the trouble of combining multiple pellets into a single damage call.
-================
-*/
-vector(float damage, vector dir) BulletImpact =
-{
-	vector vel, org;
+	.fn_spread = SpreadOval,
+	.fn_low_ammo = NoOpEnd,
+	.fn_no_ammo = NoOpEnd,
 	
-	vel = normalize(dir + v_up*crandom() + v_right*crandom());
-	vel = vel + 2*trace_plane_normal;
+	.fn_hit_alive = TraceHitAlive,
+	.fn_hit_dead = TraceHitDead,
+	.fn_hit_inanimate = TraceHitInanimate,
+	.fn_hit_damageable = TraceHitDamageable,
+	.fn_hit_ignore = NoOpHitContinue,
+	.fn_hit_end = NoOpHitEnd
+};
+const b_weapon b_soldiershotgun = {
+	.name = "soldiershotgun",
+	.fn_fire = fire_bullet,
+	.fn_vfx = player_shot1,
 
-	org = trace_endpos - dir*4;
+	.fn_spread = SpreadOval,
+	.fn_low_ammo = NoOpEnd,
+	.fn_no_ammo = NoOpEnd,
+	
+	.fn_hit_alive = TraceHitAlive,
+	.fn_hit_dead = TraceHitDead,
+	.fn_hit_inanimate = TraceHitInanimate,
+	.fn_hit_damageable = TraceHitDamageable,
+	.fn_hit_ignore = NoOpHitContinue,
+	.fn_hit_end = NoOpHitEnd
+};
+const b_weapon b_supershotgun = {
+	.name = "supershotgun",
+	.fn_fire = fire_bullet,
+	.fn_vfx = player_shot1,
 
-	if (trace_ent.takedamage)
-	{
-		SpawnBlood (org, vel*40, damage);
-		AddMultiDamage (trace_ent, damage);
-	}
-	else gunshot(org);
+	.fn_spread = SpreadOval,
+	.fn_low_ammo = SuperShotgunLowAmmo,
+	.fn_no_ammo = NoOpEnd,
 
-	return org;
-}
+	.fn_hit_alive = TraceHitAlive,
+	.fn_hit_dead = TraceHitDead,
+	.fn_hit_inanimate = TraceHitInanimate,
+	.fn_hit_damageable = TraceHitDamageable,
+	.fn_hit_ignore = NoOpHitContinue,
+	.fn_hit_end = NoOpHitEnd
+};
 
-float(entity t) HasBeenShotToDeath =
-{
-	if (t.multi_dmg < t.health) return FALSE;
-	if (DamageCanKill(t,t.multi_dmg)) return TRUE;
+void() NoOpVoid {}
+Branch() NoOpContinue { return Branch::Continue; }
+Branch() NoOpEnd { return Branch::End; }
+
+float() SuperShotgunLowAmmo {
+	if (self.items & IT_SHOTGUN) w_fire(b_shotgun);
 	return FALSE;
 }
+Branch(float damage, vector dir) NoOpHitContinue { return Branch::Continue; }
+Branch(float damage, vector dir) NoOpHitEnd { return Branch::End; }
+void(float damage, vector dir) TraceHitFlesh {
+	vector origin = trace_endpos - dir*4;
+	vector reflect_dir = dir - trace_plane_normal * 2 * DotProduct(dir, trace_plane_normal);
+	reflect_dir = normalize(reflect_dir);
+	AddMultiDamage (trace_ent, damage);
+	pointparticles(p_hit_flesh, origin, reflect_dir, 1);
+}
+Branch(float damage, vector dir) TraceHitAlive {
+	TraceHitFlesh(damage, dir);
+	return Branch::End;
+}
+Branch(float damage, vector dir) TraceHitDead {
+	TraceHitFlesh(damage, dir);
+	return Continue;
+}
+Branch(float damage, vector dir) TraceHitObject {
+	vector origin = trace_endpos;
+	vector reflect_dir = dir - trace_plane_normal * 2 * DotProduct(dir, trace_plane_normal);
+	reflect_dir = normalize(reflect_dir);
+	pointparticles(p_hit_inanimate, origin, reflect_dir, 1);
+	return Branch::End;
+}
+Branch(float damage, vector dir) TraceHitInanimate {
+	return TraceHitObject(damage, dir);
+}
+Branch(float damage, vector dir) TraceHitDamageable {
+	AddMultiDamage (trace_ent, damage);
+	return TraceHitObject(damage, dir);
+}
+Branch(entity t) HasBeenShotToDeath {
+	if (t.multi_dmg < t.health) return Branch::End;
+	if (DamageCanKill(t, t.multi_dmg)) return Branch::Continue;
+	return Branch::End;
+}
+HitOutcome(entity ignore_ent, float penetrations) HitBranch {
+	if (trace_fraction == 1.0) return HitOutcome::End;
+	if (trace_ent == ignore_ent) return HitOutcome::Ignore;
+	float is_creature = trace_ent.flags & FL_MONSTER || trace_ent.classname == "Player";
+	float dead_soon = HasBeenShotToDeath(trace_ent);
+	if (is_creature) {
+		if (dead_soon) return HitOutcome::Dead;
+		else return HitOutcome::Alive;
+	}
+	if (trace_ent.takedamage) return HitOutcome::Damageable;
+	if (penetrations == 0) return HitOutcome::Inanimate;
+	return HitOutcome::End;
+}
+void(vector dir) fire_bullet {
+	vector shot_origin, dir_with_spread;
 
-/*
-================
-FireBullets
+	vector spread = wcvar_vec(w_ctx.name, "spread");
+	float shot_count = wcvar(w_ctx.name, "shot_count");
 
-Used by shotgun, super shotgun, and enemy soldier firing
-================
-*/
-void(float shotcount, vector dir, vector spread) FireBullets =
-{
-	vector src, dir_with_spread;
-	entity ig;
-	float s, lim;
-	
-	if (shotcount <= 0) return;
+	if (shot_count <= 0) return;
 	
 	makevectors(self.v_angle);
-
-	if (trace_debug) dprint3("*** firing ", ftos(shotcount), " bullets *\n\n");
-	for (s = 0; s < shotcount; s++)
-	{
-		src = self.origin + v_forward*10;
-		src_z = self.absmin_z + self.size_z * 0.7;
-		dir_with_spread = SpreadVector(dir, spread);
-		
-		if (trace_debug) dprint("* firing a bullet *\n");
-		
-		lim = 0;
-		// check for trace-through cases
-		for (ig = self; ig != world; lim++)	// ig == world if we hit a wall or hit nothing
-		{
-			traceline2(src, src + dir_with_spread*2048, ig, 0);
-			
-			if (trace_ent == self)
-				return;	// some notrace shit happened
-		
-			// if we've already pelted a monster enough to kill it, let additional bullets add 
-			// up for possible gibs (ala quake), but trace them again through the target for 
-			// better crowd control feels (ala doom).
-			// this is only noticeable with big hordes of weak guys, but it makes big hordes of
-			// weak guys not feel like solid ammo-sponge walls.
-			if (trace_ent.takedamage && 
-				(trace_ent.flags & FL_MONSTER || trace_ent.classname == "player" ) && 
-				// some id shootables are actually trigger_multiples with health and SOLID_BBOX, so this doesn't work (see e1m6):
-				//( trace_ent.solid == SOLID_BBOX || trace_ent.solid == SOLID_SLIDEBOX ) &&	
-				HasBeenShotToDeath(trace_ent) )
-			{
-				BulletImpact(CvarWithSpread ("shotgun", "dmgA"), dir_with_spread);
-
-				// start 0.1 unit forward, or else when shooting an adjacent enemy we'll
-				// just hit ourselves again
-				src = trace_endpos + dir_with_spread * 0.1;
-				ig = trace_ent;
-				if (trace_debug) dprint3("bullet hit ", ig.classname, ", continuing thru\n");
-			}
-			else
-			{
-				if (trace_debug) dprint("bullet reached world\n");
-				ig = world;
-			}
-			if (lim > 8)
-			{
-				dprint("bullet pen limit exceeded\n");
-				break;
-			}
-		}
-		
-		if (trace_fraction != 1.0)
-		{
-			BulletImpact(CvarWithSpread("shotgun", "dmgB"), dir_with_spread);
-		}
-		
-		if (trace_debug) dprint("bullet is over\n\n");
-	}
-}
-
-/*
-================
-W_FireShotgun
-================
-*/
-void() W_FireShotgun =
-{
-	local vector dir;
-	vector spread = cvar_vec("w_shotgun_spread_vec");
-	// for ai_nav:
-	/*if (nav_w_nodeLink())
-	{
-		self.attack_finished = time + 0.5;
-		return;
-	}*/
-	
-	sound (self, CHAN_WEAPON, "weapons/guncock.wav", 1, ATTN_NORM);	
-
-	self.punchangle_x = -2;
-	makevectors(self.v_angle);
-	
-	self.currentammo = self.ammo_shells = self.ammo_shells - cvar("w_shotgun_ammo_cost");
 	dir = aim (self, AUTOAIM_DIST);
+	shot_origin = self.origin + v_forward * 10;
+	shot_origin_z = self.absmin_z + self.size_z * 0.7;
 
+	if (trace_debug) dprint3("*** firing ", ftos(shot_count), " bullets *\n\n");
 	ClearMultiDamage ();
-	FireBullets (cvar("w_shotgun_shot_count"), dir, spread);
-	self.attack_finished = time + cvar("w_shotgun_attack_delay");
-	
+	for (float shot = 0; shot < shot_count; shot++)
+	{
+		dir_with_spread = w_ctx.fn_spread(dir, spread);
+		TraceHitscan(shot_origin, dir_with_spread, self);
+	}
 	ApplyMultiDamage ();
 }
-
-
-/*
-================
-W_FireSuperShotgun
-================
-*/
-void() W_FireSuperShotgun =
-{
-	local vector dir;
-	
-	// for ai_nav:
-	/*if (nav_w_nodeLinkSpecial())
+void(vector origin, vector dir_with_spread, entity initial_ignore) TraceHitscan {
+	vector destination;
+	entity ignore_ent = initial_ignore;
+	// penetrate dead enemies, but deal damage to potentially gib
+	for (float penetrations = 0; penetrations <= 8; penetrations++)
 	{
-		self.attack_finished = time + 0.5;
-		return;
-	}*/
-
-	if (self.currentammo == 1)
-	{
-		if (self.items & IT_SHOTGUN)
-			W_FireShotgun ();
-		return;
+		// dmg_dead: sum half original damage, half original damage as spread, half original spread?
+		float dmg = wcvar_spread(w_ctx.name, "dmg");
+		float dmg_dead = 0.5 * (dmg + dmg * random());
+		destination = origin + dir_with_spread * 2048;
+		traceline2(origin, destination, ignore_ent, 0);
+		HitOutcome outcome = HitBranch(ignore_ent, penetrations);
+		Branch cont = hit_callbacks(outcome, dmg, dmg_dead, dir_with_spread);
+		if (cont == Branch::Continue) {
+			origin = trace_endpos + dir_with_spread * 0.1;
+			ignore_ent = trace_ent;
+			continue;
+		}
+		break;
 	}
-	
-	sound (self, CHAN_WEAPON, "weapons/shotgn2.wav", 1, ATTN_NORM);	
-
-	self.punchangle_x = -4;
-	
-	self.currentammo = self.ammo_shells = self.ammo_shells - cvar("w_supershotgun_ammo_cost");
-	dir = aim (self, AUTOAIM_DIST);
-
-	ClearMultiDamage ();
-
-	FireBullets (cvar("w_supershotgun_shot_count"), dir, cvar_vec("w_supershotgun_spread_vec"));
-	self.attack_finished = time + cvar("w_supershotgun_attack_delay");
-	
-	ApplyMultiDamage ();
+}
+Branch(HitOutcome outcome, float dmg, float dmg_dead, vector dir_with_spread) hit_callbacks {
+	switch (outcome) {
+		case HitOutcome::Dead: return w_ctx.fn_hit_dead(dmg_dead, dir_with_spread);
+		case HitOutcome::Ignore: return w_ctx.fn_hit_ignore(dmg, dir_with_spread);
+		case HitOutcome::Alive: return w_ctx.fn_hit_alive(dmg, dir_with_spread);
+		case HitOutcome::Inanimate: return w_ctx.fn_hit_inanimate(dmg, dir_with_spread);
+		case HitOutcome::Damageable: return w_ctx.fn_hit_damageable(dmg, dir_with_spread);
+		case HitOutcome::End: return w_ctx.fn_hit_end(dmg, dir_with_spread);
+	}
+	return Branch::End;
 }

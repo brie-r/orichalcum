@@ -125,9 +125,11 @@ void(vector org, vector vel) SpawnMeatSpray =
 SpawnBlood
 ================
 */
-void(vector org, vector vel, float damage) SpawnBlood =
+void(vector origin, vector vel, float damage) SpawnBlood =
 {
-	particle (org, vel*0.1, 73, damage*2);
+	dprint("SpawnBlood");
+	pointparticles(p_hit_inanimate, origin, vel, 1);
+	// particle (origin, vel*0.1, 73, damage*2);
 }
 
 //============================================================================

@@ -455,23 +455,19 @@ void(entity targ, entity inflictor, entity attacker, float damage, float dmgtype
 	}
 
 	// team play damage avoidance
-	if (teamplay && attacker.classname == "player")
+	if (attacker.classname == "player")
 	{
-		if ((targ.team > 0) && 
+		if (teamplay &&
+			(targ.team > 0) && 
 			(targ.team == attacker.team) && 
 			(targ != attacker) && 
 			(inflictor.classname != "door") )	// because squishing a teammate is still possible
 			return;
-
-		// teamplay is automatically damage avoidance in coop because friends are always a team
 		if (coop && 
 			targ.classname == "player" &&
 			attacker != targ)
 			return;
 	}
-
-
-
 	damage = max(1, floor(damage));
 	save = ArmorSave(targ, damage, dmgtype);
 	targ.armorvalue = targ.armorvalue - save;

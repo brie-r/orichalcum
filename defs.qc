@@ -275,6 +275,10 @@ float *cdtrack;	// fteqcc supports pointers. madness. see void() worldspawn
 
 float sandyMadeThis; // for special-casing SOMEBODY's stale keyvalues and clumsy mapping
 
+// for precaching particles
+float p_hit_inanimate;
+float p_hit_flesh;
+
 //================================================
 
 // world fields
@@ -329,6 +333,7 @@ float sandyMadeThis; // for special-casing SOMEBODY's stale keyvalues and clumsy
 .float		bubble_count;	// keeps track of the number of bubbles
 .float		healthtime;
 .string		deathtype;		// keeps track of how the player died
+.float		character;		// tracks player character / class
 
 #ifndef NO_CSQC
 // fields for csqc HUD stats

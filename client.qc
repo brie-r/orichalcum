@@ -1546,29 +1546,29 @@ void() PlayerPreThink =
 		CheckWaterJump ();
 
 
-//johnfitz ladder conditions //added from Rubicon2 client.qc -- dumptruck_ds
-if (do_ladder_physics)
-{
-	if (self.button2)
+	//johnfitz ladder conditions //added from Rubicon2 client.qc -- dumptruck_ds
+	if (do_ladder_physics)
 	{
-		PlayerClimb ();
+		if (self.button2)
+		{
+			PlayerClimb ();
+		}
+		else
+		{
+			self.flags = self.flags | FL_JUMPRELEASED;
+			self.velocity = 0.9 * self.velocity;
+			self.velocity_z = 0;
+		}
 	}
 	else
 	{
-		self.flags = self.flags | FL_JUMPRELEASED;
-		self.velocity = 0.9 * self.velocity;
-		self.velocity_z = 0;
-	}
-}
-else
-{
-	if (self.button2)
-		PlayerJump ();
-	else
-		self.flags = self.flags | FL_JUMPRELEASED;
-} //johnfitz
-	
-// teleporters can force a non-moving pause time	
+		if (self.button2)
+			PlayerJump ();
+		else
+			self.flags = self.flags | FL_JUMPRELEASED;
+	} //johnfitz
+		
+	// teleporters can force a non-moving pause time	
 	if (time < self.pausetime)
 		self.velocity = '0 0 0';
 
@@ -1577,7 +1577,7 @@ else
 		self.weapon != IT_AXE
 		)
 	{
-		W_SelectBestWeapon();
+		// W_SelectBestWeapon();
 	}
 
 	if (self.movetype == MOVETYPE_NOCLIP)
@@ -1585,6 +1585,39 @@ else
 		self.flags = self.flags | FL_FLY;
 	}
 	
+	// untested
+	// right place to change this is the .exe but oh well
+	if ((coop || teamplay) && cvar("sv_team_passthru") == 1) {
+		entity player;
+		float nudge_radius = cvar("sv_nudge_radius");
+		float nudge_force = cvar("sv_nudge_force");
+		player = find(world, classname, "player");
+		while (player) {
+			if (player != self && player.team == self.team) {
+				player.oldstyle = player.solid;
+				player.solid = SOLID_NOT;
+
+				if (cvar("sv_team_nudge") && (float)player >= (float)self ) {
+					vector delta = self.origin - player.origin;
+					if (fabs(delta_z) >= self.size_z) {
+						continue;
+					}
+					delta_z = 0;
+					float distance = vlen(delta);
+					if (distance < nudge_radius && distance > 0) {
+						float overlap = nudge_radius - distance;
+						float push_magnitude = overlap * (nudge_force / nudge_radius);
+						vector push_dir = normalize(delta);
+						vector push_vel = push_dir * push_magnitude;
+						self.velocity = self.velocity + push_vel;
+						player.velocity = player.velocity - push_vel;
+					}
+				}
+			}
+			player = find(player, classname, "player");
+		}
+	}
+
 	// ai_nav
 	//nav_editorThink();
 }
@@ -1640,7 +1673,21 @@ void() PlayerPostThink =
 	
 	if (!(self.flags & FL_ONGROUND))
 		self.jump_flag = self.velocity_z;
-		
+	
+	// untested
+	// right place to change this is also the .exe but oh well
+	if ((coop || teamplay) && cvar("sv_team_passthru") == 1) {
+		entity player;
+		player = find(world, classname, "player");
+		while (player) {
+			if (player != self && player.oldstyle != 0) {
+				player.solid = player.oldstyle;
+				player.oldstyle = 0;
+			}
+			player = find(player, classname, "player");
+		}
+	}
+
 	// vaulting off the top of stairs sucks, but the right place to fix this is the .exe
 	/*
 	if (self.flags & FL_ONGROUND)

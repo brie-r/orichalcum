@@ -241,7 +241,7 @@ void() abmage_lavaball_touch =
 void() AbMageLavaball =
 {
 	vector org, vec;
-	entity missile2;
+	local float speed;
 
 	org = self.origin + v_forward*16 + v_right*12 + v_up*45;
 	vec = normalize(enemy_vispos() - org + enemy_aim_vertical());
@@ -258,10 +258,10 @@ void() AbMageLavaball =
 	sound (self, CHAN_WEAPON, "boss1/throw.wav", 1, ATTN_NORM);
 
 	if (skill == 3)
-		missile2 = launch_lavamissile (org, vec * 800);
+		speed = 800;
 	else
-		missile2 = launch_lavamissile (org, vec * 700);
-	missile2.touch = abmage_lavaball_touch;
+		speed = 700;
+	launch_lavamissile (org, vec * speed, abmage_lavaball_touch);
 }
 
 
