@@ -23,27 +23,20 @@ void(float damage) spawn_touchblood =
 
 // --------------------------------
 
-vector(vector muzzle) W_SpikeOrigin =
-{
+vector(float angle_change, float angle_offset, float distance) origin_star {
+	float angle = angle_change * self.cnt + angle_offset;
+	vector offset = Vector(cos(angle * DEG2RAD), 0, sin(angle * DEG2RAD)) * distance;
 	return (self.origin + '0 0 16' + 
 			11 * v_forward +
-			muzzle_x * v_right +
-			muzzle_z * v_up);
+			offset_x * v_right +
+			offset_z * v_up);
 }
 
-vector(vector fwd, vector spread) W_SpikeDir =
-{
-	// TODO: untested
-	return normalize(fwd + vec_scale(2 * v_right * crandom() + v_up * crandom(), spread));
-}
-
-void() W_FireNailgun =
-{
+void() W_FireNailgun {
 
 	// TODO: nail spread here
 
-	vector offset, v, org, dir;
-	float speed;
+	vector v, dir;
 	// remember sv_aim
 	dir = aim( self, AUTOAIM_DIST );
 	v = vectoangles( dir );
@@ -51,31 +44,32 @@ void() W_FireNailgun =
 	makevectors( v );
 
 	sound (self, CHAN_WEAPON, "weapons/rocket1i.wav", 1, ATTN_NORM);
-	self.currentammo = self.ammo_nails = self.ammo_nails - cvar("w_nailgun_ammo_cost");
-	offset = VEC_ORIGIN;
-	if ( mod( self.cnt, 2 ) ) offset_x = -2.5;
-	else offset_x = 2.5;
+	self.currentammo = self.ammo_nails = self.ammo_nails - wcvar("nailgun", "ammo_cost");
 
-	org = W_SpikeOrigin(offset);
-	speed = wcvar_spread("nail", "speed");
+	// vector shot_origin = origin_star(122, 0, 10);
+	vector shot_origin = origin_star(180, 0, 2.5);
+	float speed = wcvar_spread("nail", "speed");
 	// default sv_maxvelocity is 2000, any higher leads to weird 
 	// angular offsets caused by clamping the velocity
-	launch_nail(org, dir * speed);
-	self.attack_finished += cvar("w_nailgun_attack_delay");
+	launch_nail(shot_origin, dir * speed);
+	self.attack_finished += wcvar("nailgun", "attack_delay");
 }
 
-void() spike_unfatten = { self.movetype = MOVETYPE_FLY; }
+void() spike_unfatten { self.movetype = MOVETYPE_FLY; }
 
-void() W_FirePerforator =
-{
-	vector offset;
+vector() perforator_origin {
+	float angle = 135 * self.cnt + 45;
+	vector offset = Vector(cos(angle * DEG2RAD), 0, sin(angle * DEG2RAD)) * 1.25;
+	return (self.origin + '0 0 16' + 
+			// originally 11
+			11 * v_forward +
+			offset_x * v_right +
+			offset_z * v_up);
+}
+
+void() W_FirePerforator {
 	sound (self, CHAN_WEAPON, "weapons/spike2.wav", 1, ATTN_NORM);
-	self.currentammo = self.ammo_nails = self.ammo_nails - cvar("w_perforator_ammo_cost");
-	
-	if (mod(self.cnt, 4) == 0) offset = '0 0 1.25';
-	else if (mod(self.cnt, 4) == 1) offset = '1 0 1';
-	else if (mod(self.cnt, 4) == 2) offset = '1.25 0 0';
-	else if (mod(self.cnt, 4) == 3) offset = '1 0 -1';
+	self.currentammo = self.ammo_nails = self.ammo_nails - wcvar("perforator", "ammo_cost");
 
 	vector spread1 = wcvar_vec("perforator", "spread1");
 	vector spread2 = wcvar_vec("perforator", "spread2");
@@ -84,9 +78,8 @@ void() W_FirePerforator =
 	vector dir1 = SpreadOval(v_forward, spread1);
 	vector dir2 = SpreadOval(v_forward, spread2);
 
-	entity spike1, spike2;
-	spike1 = launch_nail(W_SpikeOrigin(offset), dir1 * speed1);
-	spike2 = launch_nail(W_SpikeOrigin(offset), dir2 * speed2);
+	entity spike1 = launch_nail(origin_star(135, 45, 1.25), dir1 * speed1);
+	entity spike2 = launch_nail(origin_star(135, 45, 1.25), dir2 * speed2);
 
 	// weaken the SNG at long distance while keeping the spread under control
 	spike1.think = spike_unfatten;
@@ -94,7 +87,7 @@ void() W_FirePerforator =
 	spike1.nextthink = time + 0.25;
 	spike2.nextthink = time + 0.3;
 	
-	self.attack_finished += cvar("w_perforator_attack_delay");
+	self.attack_finished += wcvar("perforator", "attack_delay");
 	
 	if (has_quad(self))
 	{
@@ -113,8 +106,7 @@ void() W_FirePerforator =
 	}
 }
 
-void() W_FireSpikes =
-{
+void() W_FireSpikes {
 	if (self.ammo_nails < 1 || (self.ammo_nails < 2 && !(self.items & IT_NAILGUN)))
 	{
 		W_SelectBestWeapon();
@@ -130,8 +122,8 @@ void() W_FireSpikes =
 		W_FireNailgun();
 	}
 	self.punchangle_x = -2;
-	
-	self.cnt = cycle(self.cnt,8);
+	self.cnt += 1;
+	// self.cnt = cycle(self.cnt,8);
 }
 
 float() CheckValidSpikeTouch =

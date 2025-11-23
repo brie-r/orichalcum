@@ -105,7 +105,7 @@ HitOutcome(entity ignore_ent, float penetrations) HitBranch {
 	return HitOutcome::End;
 }
 void(vector dir) fire_bullet {
-	vector shot_origin, dir_with_spread;
+	vector dir_with_spread;
 
 	vector spread = wcvar_vec(w_ctx.name, "spread");
 	float shot_count = wcvar(w_ctx.name, "shot_count");
@@ -114,8 +114,7 @@ void(vector dir) fire_bullet {
 	
 	makevectors(self.v_angle);
 	dir = aim (self, AUTOAIM_DIST);
-	shot_origin = self.origin + v_forward * 10;
-	shot_origin_z = self.absmin_z + self.size_z * 0.7;
+	vector shot_origin = bullet_origin();
 
 	if (trace_debug) dprint3("*** firing ", ftos(shot_count), " bullets *\n\n");
 	ClearMultiDamage ();
@@ -157,4 +156,9 @@ Branch(HitOutcome outcome, float dmg, float dmg_dead, vector dir_with_spread) hi
 		case HitOutcome::End: return w_ctx.fn_hit_end(dmg, dir_with_spread);
 	}
 	return Branch::End;
+}
+vector() bullet_origin {
+	vector shot_origin = self.origin + v_forward * 10;
+	shot_origin_z = self.absmin_z + self.size_z * 0.7;
+	return shot_origin;
 }

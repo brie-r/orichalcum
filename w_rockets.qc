@@ -122,8 +122,7 @@ void(vector dir) fire_rocket {
 	self.punchangle_x = -2;
 	
 	makevectors (self.v_angle);
-	vector shot_origin = self.origin + v_forward * 8 + '0 0 16';
-	
+	vector shot_origin = rocket_origin();
 	float speed = wcvar_spread("rocket", "speed");
 	float shot_count = wcvar(w_ctx.name, "shot_count");
 	vector spread = wcvar_vec(w_ctx.name, "spread");
@@ -133,6 +132,10 @@ void(vector dir) fire_rocket {
 	}
 
 	self.attack_finished = time + wcvar(w_ctx.name, "attack_delay");
+}
+
+vector rocket_origin() {
+	return self.origin + v_forward * 8 + '0 0 16';
 }
 
 //=============================================================================
@@ -147,10 +150,8 @@ GERNADES
 
 void() GrenadeExplode {
 	float dmg = wcvar_spread(w_ctx.name, "dmg");
-	// self.origin_z = self.origin_z + 4;
 	T_RadiusDamage (self, self.trueowner, dmg, world, DMGTYPE_EXPLOSION);
 	//T_GibDownedZombies (self, 120);
-	// self.solid = SOLID_NOT;
 	BecomeExplosion ();
 }
 
@@ -186,15 +187,18 @@ void(vector dir) fire_grenade {
 	sound (self, CHAN_WEAPON, "weapons/grenade.wav", 1, ATTN_NORM);
 	self.punchangle_x = -2;
 
+	vector shot_origin = grenade_origin();
 	vector vel = grenade_vel(dir);
 
-	grenade = launch_grenade(self.origin, vel);
+	grenade = launch_grenade(shot_origin, vel);
 	self.attack_finished = time + wcvar(w_ctx.name, "attack_delay");
 	grenade.touch = GrenadeTouch;
 	grenade.th_die = GrenadeExplode;
 }
+vector grenade_origin() {
+	return self.origin;
+}
 vector(vector dir) grenade_vel {
-
 	vector spread = wcvar_vec(w_ctx.name, "spread");
 	vector vel_mult = wcvar_vec("grenade", "vel_mult");
 	// vector dir = SpreadOval(aim (self, AUTOAIM_DIST), spread);
