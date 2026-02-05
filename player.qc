@@ -203,7 +203,7 @@ void() player_nail =
 		player_run();
 		return;
 	}
-		
+	
 	self.effects |= EF_MUZZLEFLASH;
 
 	if (self.frame != $nailatt1) self.frame = $nailatt1;
@@ -211,7 +211,8 @@ void() player_nail =
 	self.think = player_nail;
 	self.nextthink = time + 0.125;	// TODO: oh fuck it, it works, you're never touching this again
 	
-	self.weaponframe = self.cnt + 1;
+	
+	self.weaponframe = self.cnt % 8 + 1;
 }
 
 //============================================================================

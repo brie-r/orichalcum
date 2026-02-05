@@ -480,11 +480,11 @@ entity(vector org, vector vel) launch_plasma =
 
 /*
 ========
-launch_rockets
+launch_rocket
 basic missile, used by player and ogre rocket fire
 ========
 */
-entity(vector org, vector vel, float shot_count, void() fn_touch) launch_rockets =
+entity(vector org, vector vel, float shot_count, void() fn_touch) launch_rocket =
 {
 	entity missile;
 	
@@ -508,7 +508,7 @@ entity(vector org, vector vel, void() fn_touch) launch_lavamissile =
 {
 	entity missile;
 	
-	missile = launch_rockets(org, vel, 1, fn_touch);	// FLYMISSILE
+	missile = launch_rocket(org, vel, 1, fn_touch);	// FLYMISSILE
 	missile.classname = "lavaball";
 	missile.avelocity = '200 200 200';
 	SUB_ChangeModel (missile, "progs/lavaball.mdl");

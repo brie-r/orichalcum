@@ -1,8 +1,8 @@
-../csprogs.dat
+./csprogs.dat
 defs.qc
-constants.qc
-maths.qc
 csdefs.qc
+shareddefs.qc
+constants.qc
+// maths.qc
 
 hud.qc
-ui_character.qc

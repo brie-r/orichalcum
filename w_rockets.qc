@@ -7,7 +7,7 @@ const b_weapon b_rocketlauncher = {
 	.fn_low_ammo = NoOpEnd,
 	.fn_no_ammo = NoOpEnd,
 	
-	.fn_hit_alive = T_MissileTouch,
+	.fn_hit_alive = w_missile_touch,
 	.fn_hit_dead = NoOpHitEnd,
 	.fn_hit_inanimate = NoOpHitEnd,
 	.fn_hit_damageable = NoOpHitEnd,
@@ -23,7 +23,7 @@ const b_weapon b_grenadelauncher = {
 	.fn_low_ammo = NoOpEnd,
 	.fn_no_ammo = NoOpEnd,
 	
-	.fn_hit_alive = GrenadeTouch,
+	.fn_hit_alive = w_grenade_touch,
 	.fn_hit_dead = NoOpHitEnd,
 	.fn_hit_inanimate = NoOpHitEnd,
 	.fn_hit_damageable = NoOpHitEnd,
@@ -78,7 +78,7 @@ void() T_ExplosiveTouch {
 }
 
 void() T_MissileExplode {
-	local float	dmg = wcvar_spread(w_ctx.name, "dmg");
+	local float	dmg = wcvar_spread(self.w_ctx.name, "dmg");
 	
 	if (other.health)
 	{
@@ -86,12 +86,15 @@ void() T_MissileExplode {
 	}
 
 	// don't do radius damage to other, because all damage will be done in the impact
-	T_RadiusDamage (self, self.trueowner, 120, other, DMGTYPE_EXPLOSION);
+	T_RadiusDamage (self, self.trueowner, dmg, other, DMGTYPE_EXPLOSION);
 }
-
+Branch(float damage, vector dir) w_missile_touch {
+	T_MissileTouch();
+	return Branch::End;
+}
 void() T_MissileTouch {
 	if (other == self.owner) return;		// don't explode on owner
-	if (CheckProjectilePassthru()) return;
+	// if (CheckProjectilePassthru()) return;
 
 	if (pointcontents(self.origin) == CONTENT_SKY)
 	{
@@ -111,30 +114,18 @@ fire_rocket
 player rocket launch inherited from generic launch_rocket
 ================
 */
-void(vector dir) fire_rocket {
-	float ammo_cost = wcvar(w_ctx.name, "ammo_cost");
-	if (self.currentammo == 0 && ammo_cost > 0) {
-		// play click sound
-		return;
-	}
-	self.currentammo = self.ammo_rockets = self.ammo_rockets - ammo_cost;
-	sound (self, CHAN_WEAPON, "weapons/sgun1.wav", 1, ATTN_NORM);
-	self.punchangle_x = -2;
+void(vector origin, vector dir) fire_rocket {
+	// sound (self, CHAN_WEAPON, "weapons/sgun1.wav", 1, ATTN_NORM);
+	// self.punchangle_x = -2;
 	
-	makevectors (self.v_angle);
-	vector shot_origin = rocket_origin();
 	float speed = wcvar_spread("rocket", "speed");
-	float shot_count = wcvar(w_ctx.name, "shot_count");
-	vector spread = wcvar_vec(w_ctx.name, "spread");
-	for(float i = 0; i < shot_count; i++) {
-		vector dir_with_spread = SpreadOval(v_forward, spread);
-		launch_rockets(shot_origin, dir_with_spread * speed, 1, T_MissileTouch);
-	}
+	entity rocket = launch_rocket(origin, dir * speed, 1, T_MissileTouch);
+	rocket.w_ctx.name = self.w_ctx.name;
 
-	self.attack_finished = time + wcvar(w_ctx.name, "attack_delay");
+	// self.attack_finished = time + wcvar(self.w_ctx.name, "attack_delay");
 }
 
-vector rocket_origin() {
+vector origin_rocket() {
 	return self.origin + v_forward * 8 + '0 0 16';
 }
 
@@ -149,7 +140,7 @@ GERNADES
 */
 
 void() GrenadeExplode {
-	float dmg = wcvar_spread(w_ctx.name, "dmg");
+	float dmg = wcvar_spread(self.w_ctx.name, "dmg");
 	T_RadiusDamage (self, self.trueowner, dmg, world, DMGTYPE_EXPLOSION);
 	//T_GibDownedZombies (self, 120);
 	BecomeExplosion ();
@@ -157,6 +148,10 @@ void() GrenadeExplode {
 
 void() GrenadeHandlePhysics;
 
+Branch(float damage, vector dir) w_grenade_touch {
+	GrenadeTouch();
+	return Branch::End;
+}
 void() GrenadeTouch {
 	if (other == self.owner ) return;		// don't explode on owner
 	if (CheckProjectilePassthru()) return;
@@ -180,18 +175,10 @@ void() GrenadeTouch {
 fire_grenade
 ================
 */
-void(vector dir) fire_grenade {
-	entity grenade;
-	
-	self.currentammo = self.ammo_rockets = self.ammo_rockets - wcvar(w_ctx.name, "ammo_cost");
-	sound (self, CHAN_WEAPON, "weapons/grenade.wav", 1, ATTN_NORM);
-	self.punchangle_x = -2;
-
-	vector shot_origin = grenade_origin();
+void(vector origin, vector dir) fire_grenade {
 	vector vel = grenade_vel(dir);
-
-	grenade = launch_grenade(shot_origin, vel);
-	self.attack_finished = time + wcvar(w_ctx.name, "attack_delay");
+	entity grenade = launch_grenade(origin, vel);
+	grenade.w_ctx.name = self.w_ctx.name;
 	grenade.touch = GrenadeTouch;
 	grenade.th_die = GrenadeExplode;
 }
@@ -199,10 +186,10 @@ vector grenade_origin() {
 	return self.origin;
 }
 vector(vector dir) grenade_vel {
-	vector spread = wcvar_vec(w_ctx.name, "spread");
+	vector spread = wcvar_vec(self.w_ctx.name, "spread");
 	vector vel_mult = wcvar_vec("grenade", "vel_mult");
 	// vector dir = SpreadOval(aim (self, AUTOAIM_DIST), spread);
-	vector dir_with_spread = w_ctx.fn_spread(dir, spread);
+	vector dir_with_spread = self.w_ctx.fn_spread(dir, spread);
 	vector fwd = normalize(dir_with_spread);
 	vector right = normalize(CrossProduct(fwd, VEC_UP));
 	vector up = normalize(CrossProduct(right, fwd));

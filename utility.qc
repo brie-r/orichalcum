@@ -853,3 +853,15 @@ void dprint_vector(vector v) =
 	dprint_float(v_z);
 	dprint(" )");
 }
+float(float b1, float b2, float b3) bytes_pack {
+    return (b1 & 255) | ((b2 & 255) << 8) | ((b3 & 255) << 16);
+};
+float(float val) byte1 {
+    return val & 255;
+};
+float(float val) byte2 {
+    return (val >> 8) & 255;
+};
+float(float val) byte3 {
+    return (val >> 16) & 255;
+};

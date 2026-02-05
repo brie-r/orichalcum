@@ -205,6 +205,10 @@ void() ImpulseCommands =
 		W_SelectLastWeapon();
 		break;
 
+	case 17:
+		w_try_reload(ReloadType::First);
+		break;
+
 	case 40:
 		dev_impulse_list();
 		break;
@@ -288,7 +292,9 @@ void() ImpulseCommands =
 	case 255:
 		Cheat_Quad();	
 		break;
-		
+	
+
+
 	default:
 		return;
 	}

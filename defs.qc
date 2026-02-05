@@ -420,6 +420,23 @@ float BREAKABLE_NO_MONSTERS = 1;
 .string	model2 = wad;		// for debris emitter
 .string model3 = map;
 
+var .float reserve_ammo;
+// .float last_reserve_ammo;
+var .float primary_ammo;
+// .float last_primary_ammo;
+.float reload_end_time;
+// .float last_reload_end_time;
+.float primary_ammo_shotgun;
+.float primary_ammo_soldiershotgun;
+.float primary_ammo_supershotgun;
+.float primary_ammo_nailgun;
+.float primary_ammo_perforator;
+.float primary_ammo_grenadelauncher;
+.float primary_ammo_rocketlauncher;
+.float primary_ammo_lightning;
+
+.float fire_num;
+.float shot_num;
 
 //===========================================================================
 // builtin functions

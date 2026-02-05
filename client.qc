@@ -46,7 +46,7 @@ void() SetChangeParms =
 	
 	// cap super health
 	self.health = min(self.health, self.max_health);		
-	// bump the player up if he's below 50 <- pretty much the only 'autobalance' in quake
+	// bump the player up if they're below 50 <- pretty much the only 'autobalance' in quake
 	if (skill == 3)	// nightmare players get just enough not to crater
 		self.health = max(self.health, 10);
 	else
@@ -72,14 +72,17 @@ void() SetNewParms =
 {
 	parm1 = IT_SHOTGUN | IT_AXE;
 	parm2 = 100;
-	parm4 = 25;
+	parm4 = 16;
 	parm8 = IT_SHOTGUN;
 	parm3 = 0;
 	parm5 = 0;
 	parm6 = 0;
 	parm7 = 0;
 	parm9 = 0;
-//	parm10 = 0;
+	// primary ammo
+	parm11 = bytes_pack(8, 0, 0); // shotgun, ssg, nailgun
+	parm12 = bytes_pack(0, 0, 0); // perforator, grenade, rocket
+	parm13 = bytes_pack(0, 0, 0); // lightning
 }
 
 
@@ -89,7 +92,7 @@ void() SetCoopParms =
 {
 	parm1 = self.items & IT_WEAPONS;
 	parm2 = 100;
-	parm4 = max(25,self.ammo_shells);
+	parm4 = max(16,self.ammo_shells);
 	if (parm1 & IT_SUPER_SHOTGUN)
 		parm8 = IT_SUPER_SHOTGUN;
 	else
@@ -100,12 +103,13 @@ void() SetCoopParms =
 	parm6 = 0;
 	parm7 = 0;
 	parm9 = 0;
-//	parm10 = 0;
+	parm11 = bytes_pack(self.primary_ammo_shotgun, self.primary_ammo_supershotgun, self.primary_ammo_nailgun);
+	parm12 = bytes_pack(self.primary_ammo_perforator, self.primary_ammo_grenadelauncher, self.primary_ammo_rocketlauncher);
+	parm13 = bytes_pack(self.primary_ammo_lightning, 0, 0);
 }
 
 void() DecodeLevelParms =
 {
-	
 	if (world.model == "maps/start.bsp")
 		SetNewParms ();		// take away all stuff on starting new episode
 	
@@ -117,7 +121,17 @@ void() DecodeLevelParms =
 	self.ammo_rockets = parm6;
 	self.ammo_cells = parm7;
 	self.armortype = parm9;
+
+	self.worldtype = parm10 & 255;
 	
+	self.primary_ammo_shotgun = byte1(parm11);
+	self.primary_ammo_supershotgun = byte2(parm11);
+	self.primary_ammo_nailgun = byte3(parm11);
+	self.primary_ammo_perforator = byte1(parm12);
+	self.primary_ammo_grenadelauncher = byte2(parm12);
+	self.primary_ammo_rocketlauncher = byte3(parm12);
+	self.primary_ammo_lightning = byte1(parm13);
+
 	//self.weapon = parm8;
 	W_Select(parm8);
 	armor_set_type(self);
@@ -1584,39 +1598,6 @@ void() PlayerPreThink =
 	{
 		self.flags = self.flags | FL_FLY;
 	}
-	
-	// untested
-	// right place to change this is the .exe but oh well
-	if ((coop || teamplay) && cvar("sv_team_passthru") == 1) {
-		entity player;
-		float nudge_radius = cvar("sv_nudge_radius");
-		float nudge_force = cvar("sv_nudge_force");
-		player = find(world, classname, "player");
-		while (player) {
-			if (player != self && player.team == self.team) {
-				player.oldstyle = player.solid;
-				player.solid = SOLID_NOT;
-
-				if (cvar("sv_team_nudge") && (float)player >= (float)self ) {
-					vector delta = self.origin - player.origin;
-					if (fabs(delta_z) >= self.size_z) {
-						continue;
-					}
-					delta_z = 0;
-					float distance = vlen(delta);
-					if (distance < nudge_radius && distance > 0) {
-						float overlap = nudge_radius - distance;
-						float push_magnitude = overlap * (nudge_force / nudge_radius);
-						vector push_dir = normalize(delta);
-						vector push_vel = push_dir * push_magnitude;
-						self.velocity = self.velocity + push_vel;
-						player.velocity = player.velocity - push_vel;
-					}
-				}
-			}
-			player = find(player, classname, "player");
-		}
-	}
 
 	// ai_nav
 	//nav_editorThink();
@@ -1673,20 +1654,6 @@ void() PlayerPostThink =
 	
 	if (!(self.flags & FL_ONGROUND))
 		self.jump_flag = self.velocity_z;
-	
-	// untested
-	// right place to change this is also the .exe but oh well
-	if ((coop || teamplay) && cvar("sv_team_passthru") == 1) {
-		entity player;
-		player = find(world, classname, "player");
-		while (player) {
-			if (player != self && player.oldstyle != 0) {
-				player.solid = player.oldstyle;
-				player.oldstyle = 0;
-			}
-			player = find(player, classname, "player");
-		}
-	}
 
 	// vaulting off the top of stairs sucks, but the right place to fix this is the .exe
 	/*
@@ -1702,6 +1669,35 @@ void() PlayerPostThink =
 		self.customflags = not(self.customflags, CFL_WASONGROUND);
 	}
 	*/
+
+	msg_entity = self;
+	WriteByte(MSG_ONE, SVC_UPDATESTAT);
+	WriteByte(MSG_ONE, STAT_CLIP_STATUS);
+	WriteLong(MSG_ONE, check_clip_status());
+
+
+	// if (self.primary_ammo != self.last_primary_ammo)
+	// {
+		msg_entity = self;
+		WriteByte(MSG_ONE, SVC_UPDATESTAT);
+		WriteByte(MSG_ONE, STAT_PRIMARY_AMMO);
+		WriteLong(MSG_ONE, self.primary_ammo);
+		// self.last_primary_ammo = self.primary_ammo;
+	// }
+	// if (self.reserve_ammo != self.last_reserve_ammo)
+	// {
+		msg_entity = self;
+		WriteByte(MSG_ONE, SVC_UPDATESTAT);
+		WriteByte(MSG_ONE, STAT_RESERVE_AMMO);
+		WriteLong(MSG_ONE, self.reserve_ammo);
+		// self.last_reserve_ammo = self.reserve_ammo;
+	// }
+	if (time < 1) {
+		msg_entity = self;
+		WriteByte(MSG_ONE, SVC_UPDATESTAT);
+		WriteByte(MSG_ONE, STAT_RESERVE_AMMO);
+		WriteLong(MSG_ONE, self.reserve_ammo);
+	}
 }
 
 /*

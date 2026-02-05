@@ -1,3 +1,6 @@
+enum ClipStatus { Primary, Reserve, Error };
+enum Align { Left, Right };
+
 const string number[10] = { "num_0", "num_1", "num_2", "num_3", "num_4", "num_5", "num_6", "num_7", "num_8", "num_9"};
 const string anumber[10] = { "anum_0", "anum_1", "anum_2", "anum_3", "anum_4", "anum_5", "anum_6", "anum_7", "anum_8", "anum_9"};
 
@@ -122,33 +125,24 @@ void(vector pos) Hud_DrawLevelInfoBar =
 
 // STATUS BAR
 
-void(vector pos, float value, float threshhold, float left = FALSE, float zeropad = 0) Hud_DrawLargeValue =
-{
+void(vector pos, float value, float threshhold, Align align, float zeropad = 0) Hud_DrawLargeValue {
 	float c;
-	float len;
-	string s;
-
-	s = FormatFloat(floor(value), zeropad, "0");
-	len = strlen(s);
-	if (!left)
+	string s = FormatFloat(floor(value), zeropad, "0");
+	float len = strlen(s);
+	if (align == Align::Right) {
 		pos_x -= 24 * len;
-
-	if (value <= threshhold)
-	{	//use alternate (red) numbers
-
-		while(len>0)
-		{
+	}
+	if (value <= threshhold) {	//use alternate (red) numbers
+		while(len>0) {
 			len--;
 			c = str2chr(s, len);
 
 			drawpic(pos + len * '24 0', anumber[c-'0'], '24 24', '1 1 1', 1, 0);
 		}
 	}
-	else
-	{	//use normal numbers
+	else {	//use normal numbers
 
-		while(len>0)
-		{
+		while(len>0) {
 			len--;
 			c = str2chr(s, len);
 
@@ -157,8 +151,7 @@ void(vector pos, float value, float threshhold, float left = FALSE, float zeropa
 	}
 };
 
-void(float type, vector pos) Hud_DrawAmmoCount =
-{
+void(float type, vector pos) Hud_DrawAmmoCount {
 	string s;
 	float value;
 	float len;
@@ -275,18 +268,18 @@ void Hud_DrawSBar(vector pos)
 	value = clampf(stat_health, 999);
 
 	Hud_DrawHead(pos + '112 0');
-	Hud_DrawLargeValue(pos+'208 0', value, 25);
+	Hud_DrawLargeValue(pos+'208 0', value, 25, Align::Right);
 
 	value = clampf(getstatf(STAT_ARMOR), 999);
 	Hud_DrawArmorIcon(pos + '1 0');
 	if (stat_items & IT_INVULNERABILITY)
-		Hud_DrawLargeValue(pos + '96 0', 666, 999);
+		Hud_DrawLargeValue(pos + '96 0', 666, 999, Align::Right);
 	else
-		Hud_DrawLargeValue(pos + '96 0', value, 25);
+		Hud_DrawLargeValue(pos + '96 0', value, 25, Align::Right);
 
 	value = clampf(getstatf(STAT_AMMO), 999);
-	Hud_DrawCurrentAmmoIcon(pos + '224 0');
-	Hud_DrawLargeValue(pos+'320 0', value, 10);
+	// Hud_DrawCurrentAmmoIcon(pos + '224 0');
+	Hud_DrawLargeValue(pos+'320 0', value, 10, Align::Right);
 };
 
 // ================================================================
@@ -553,7 +546,7 @@ void Hud_DrawModernLeft(vector pos, float expanded)
 	pos += '0 -24';
 	value = clampf(stat_health, 999);
 	Hud_DrawHead(pos);
-	Hud_DrawLargeValue(pos + '100 0', value, 25);
+	Hud_DrawLargeValue(pos + '100 0', value, 25, Align::Right);
 	
 	if (stat_items & IT_INVULNERABILITY || getstatf(STAT_ARMOR) > 0)
 	{
@@ -561,9 +554,9 @@ void Hud_DrawModernLeft(vector pos, float expanded)
 		pos += '0 -24';
 		Hud_DrawArmorIcon(pos);
 		if (stat_items & IT_INVULNERABILITY)
-			Hud_DrawLargeValue(pos + '100 0', 666, 999);
+			Hud_DrawLargeValue(pos + '100 0', 666, 999, Align::Right);
 		else if (getstatf(STAT_ARMOR) > 0)
-			Hud_DrawLargeValue(pos + '100 0', value, 25);
+			Hud_DrawLargeValue(pos + '100 0', value, 25, Align::Right);
 	}
 	
 	if (!expanded)
@@ -596,8 +589,8 @@ void Hud_DrawModernRight(vector pos, float expanded)
 {
 	//if (getstatf(STAT_ACTIVEWEAPON) != IT_AXE)
 	//{
-		Hud_DrawCurrentAmmoIcon(pos + '-24 -24');
-		Hud_DrawLargeValue(pos + '-32 -24', clampf(getstatf(STAT_AMMO), 999), 10);
+		// Hud_DrawCurrentAmmoIcon(pos + '-24 -24');
+	Hud_DrawLargeValue(pos + '-32 -24', clampf(getstatf(STAT_AMMO), 999), 10, Align::Right);
 	//}
 	
 	if (!expanded) return;
@@ -755,71 +748,71 @@ void(vector screensize) Hud_DrawTint =
 	*/
 }
 
-void(vector screensize, float scoreboard) CSQC_DrawHud =
-{
-	HUD_UpdateStats();
-	if (intermission || coopdata == -1) return;
-	float viewsize = cvar("viewsize");
-	Hud_DrawTint(screensize);
+// void(vector screensize, float scoreboard) CSQC_DrawHud =
+// {
+// 	HUD_UpdateStats();
+// 	if (intermission || coopdata == -1) return;
+// 	float viewsize = cvar("viewsize");
+// 	Hud_DrawTint(screensize);
 	
-	if (viewsize > 110)
-		return;
+// 	if (viewsize > 110)
+// 		return;
 
-	vector pos;
-	baralpha = cvar("scr_sbaralpha");
-	hudstyle = max(cvar("saved1"), cvar("hudstyle"));	// catch ironwail hud cvar
-	float margin, exp;
+// 	vector pos;
+// 	baralpha = cvar("scr_sbaralpha");
+// 	hudstyle = max(cvar("saved1"), cvar("hudstyle"));	// catch ironwail hud cvar
+// 	float margin, exp;
 
-	exp = (viewsize <= 100);
+// 	exp = (viewsize <= 100);
 
-	if (hudstyle)
-	{
-		margin = 4 * (floor(screensize_y / 120) - 1);
+// 	if (hudstyle)
+// 	{
+// 		margin = 4 * (floor(screensize_y / 120) - 1);
 		
-		if (scoreboard || stat_health <= 0)
-		{
-			Hud_DrawLevelInfoBar([screensize_x / 2, screensize_y] - '160 24');
-			if (deathmatch)
-			{
-				Hud_DrawRankings([screensize_x / 2 - 160, screensize_y / 2 - 120]);
-			}
-			else if (screensize_x >= 500 && stat_health > 0)
-			{
-				Hud_DrawModernLeft([margin, screensize_y - margin], exp);
-				Hud_DrawModernRight([screensize_x - margin, screensize_y - margin], exp);
-			}
-		}
-		else
-		{
-			Hud_DrawModernLeft([margin, screensize_y - margin], exp);
-			Hud_DrawModernCenter([screensize_x / 2, screensize_y - margin], exp);
-			Hud_DrawModernRight([screensize_x - margin, screensize_y - margin], exp);
-		}
-		if (exp)
-		{
-			if ((deathmatch && !(scoreboard || stat_health <= 0)) || coop)
-				Hud_DrawMultiplayer([margin, floor(screensize_y * 0.3)], '0 12', MP_MEDIUM);
-			Hud_DrawModernWeapons([screensize_x, floor(screensize_y * 0.4)]);
-		}		
-	}
-	else
-	{
-		pos = screensize;
-		pos_x = screensize_x / 2;
-		if (scoreboard || stat_health <= 0)
-		{
-			Hud_DrawLevelInfoBar(pos - '160 24');
-			if (coop || deathmatch)
-				Hud_DrawRankings([screensize_x / 2 - 160, screensize_y / 2 - 120]);
-		}
-		else
-			Hud_DrawSBar(pos - '160 24');
+// 		if (scoreboard || stat_health <= 0)
+// 		{
+// 			Hud_DrawLevelInfoBar([screensize_x / 2, screensize_y] - '160 24');
+// 			if (deathmatch)
+// 			{
+// 				Hud_DrawRankings([screensize_x / 2 - 160, screensize_y / 2 - 120]);
+// 			}
+// 			else if (screensize_x >= 500 && stat_health > 0)
+// 			{
+// 				Hud_DrawModernLeft([margin, screensize_y - margin], exp);
+// 				Hud_DrawModernRight([screensize_x - margin, screensize_y - margin], exp);
+// 			}
+// 		}
+// 		else
+// 		{
+// 			Hud_DrawModernLeft([margin, screensize_y - margin], exp);
+// 			Hud_DrawModernCenter([screensize_x / 2, screensize_y - margin], exp);
+// 			Hud_DrawModernRight([screensize_x - margin, screensize_y - margin], exp);
+// 		}
+// 		if (exp)
+// 		{
+// 			if ((deathmatch && !(scoreboard || stat_health <= 0)) || coop)
+// 				Hud_DrawMultiplayer([margin, floor(screensize_y * 0.3)], '0 12', MP_MEDIUM);
+// 			Hud_DrawModernWeapons([screensize_x, floor(screensize_y * 0.4)]);
+// 		}		
+// 	}
+// 	else
+// 	{
+// 		pos = screensize;
+// 		pos_x = screensize_x / 2;
+// 		if (scoreboard || stat_health <= 0)
+// 		{
+// 			Hud_DrawLevelInfoBar(pos - '160 24');
+// 			if (coop || deathmatch)
+// 				Hud_DrawRankings([screensize_x / 2 - 160, screensize_y / 2 - 120]);
+// 		}
+// 		else
+// 			Hud_DrawSBar(pos - '160 24');
 		
-		if (exp)
-			Hud_DrawIBar(pos - '160 48');
-	}
+// 		if (exp)
+// 			Hud_DrawIBar(pos - '160 48');
+// 	}
 	
-};
+// };
 
 // ================================================================
 
@@ -885,29 +878,29 @@ void(vector screensize, float scoreboard) CSQC_DrawScores =
 	drawsubpic(pos + '51 2', '96 24', "gfx/inter.lmp", [8/160, 88/144], [96/160, 24/144], '1 1 1', 1);
 	
 	value = clampf(getstatf(STAT_MONSTERS), 9999);
-	Hud_DrawLargeValue(pos+div, value, -1);
+	Hud_DrawLargeValue(pos+div, value, -1, Align::Right);
 	drawpic(pos+div, "num_slash", '16 24', '1 1 1', 1);
 	value = clampf(getstatf(STAT_TOTALMONSTERS), 9999);
-	Hud_DrawLargeValue(pos+div + '16 0', value, -1, TRUE);
+	Hud_DrawLargeValue(pos+div + '16 0', value, -1, Align::Left);
 	
 	// secrets
 	pos += '0 36';
 	drawsubpic(pos + '8 2', '136 24', "gfx/inter.lmp", [8/160, 48/144], [136/160, 24/144], '1 1 1', 1);
 	
 	value = clampf(getstatf(STAT_SECRETS), 9999);
-	Hud_DrawLargeValue(pos+div, value, -1);
+	Hud_DrawLargeValue(pos+div, value, -1, Align::Right);
 	drawpic(pos+div, "num_slash", '16 24', '1 1 1', 1);
 	value = clampf(getstatf(STAT_TOTALSECRETS), 9999);
-	Hud_DrawLargeValue(pos+div + '16 0', value, -1, TRUE);
+	Hud_DrawLargeValue(pos+div + '16 0', value, -1, Align::Left);
 	
 	// time
 	pos += '0 36';
 	drawsubpic(pos + '67 2', '80 24', "gfx/inter.lmp", [8/160, 8/144], [80/160, 24/144], '1 1 1', 1);
 	
 	mins = clampf(mins, 999);
-	Hud_DrawLargeValue(pos+div, mins, -1);
+	Hud_DrawLargeValue(pos+div, mins, -1, Align::Right);
 	drawpic(pos+div, "num_colon", '16 24', '1 1 1', 1);
-	Hud_DrawLargeValue(pos+div + '16 0', secs, -1, TRUE, 2);
+	Hud_DrawLargeValue(pos+div + '16 0', secs, -1, Align::Left, 2);
 	
 	if (coop)
 		Hud_DrawMultiplayer(pos + '72 40', '0 12', MP_WIDE);
@@ -988,3 +981,215 @@ void(float apilevel, string enginename, float engineversion) CSQC_Init = {
 	checkextension("FTE_STRINGS");
 	Hud_Init();
 }
+// ================================================================
+// VKQUAKE MODERN HUD REIMPLEMENTATION
+// ================================================================
+
+// Helper: 8x8 font number drawing for small ammo
+void(vector pos, float value, Align align) Hud_DrawSmallNum =
+{
+	string s;
+	float len, c;
+	
+	value = clampf(value, 999);
+	s = ftos(floor(value));
+	len = strlen(s);
+	
+	// Right align to 3 digits (24 pixels)
+	if (align == Align::Right) {
+		pos_x += (3 - len) * 8;
+	}
+	while(len > 0)
+	{
+		len--;
+		c = str2chr(s, len);
+		drawcharacter(pos + len * '8 0', (18-'0') + c, '8 8', '1 1 1', 1, 0);
+	}
+};
+
+void(vector pos) Hud_DrawVkQuake_Left {
+	float value;
+	vector base_pos;
+	
+	// Anchor bottom left
+	base_pos = pos + '0 -40 0';
+
+	// Draw face
+	// Hud_DrawHead(base_pos + '20 0 0');
+
+	// Draw health (25 right of face)
+	value = clampf(stat_health, 999);
+	Hud_DrawLargeValue(base_pos + '18 0 0', value, 25, Align::Left); 
+
+	// Draw armor above health (25 above face)
+	float armor_val = getstatf(STAT_ARMOR);
+	float armor_active = (stat_items & IT_INVULNERABILITY) || (armor_val > 0);
+	
+	if (armor_active)
+	{
+		vector armor_pos = base_pos + '0 -25 0';
+		
+		Hud_DrawArmorIcon(armor_pos + '20 0 0');
+		
+		if (stat_items & IT_INVULNERABILITY)
+			Hud_DrawLargeValue(armor_pos + '45 0 0', 666, 999, Align::Left);
+		else
+			Hud_DrawLargeValue(armor_pos + '45 0 0', clampf(armor_val, 999), 25, Align::Left);
+	}
+
+	// 4. Draw Powerups (Stacked Vertically)
+	// Internal logic: Starts 17px above top element (Health or Armor)
+	// If Armor is drawn (at -25), top is -25. -25 - 17 = -42.
+	// If Armor is NOT drawn, top is 0. 0 - 17 = -17.
+	float y_up = armor_active ? -42 : -17;
+	vector pup_pos = base_pos + '20 0 0';
+	pup_pos_y += y_up;
+
+	// Iterate and stack upwards
+	if (stat_items & IT_SUIT) {
+		Hud_DrawSuit(pup_pos);
+		pup_pos_y -= 17;
+	}
+	if (stat_items & IT_INVISIBILITY) {
+		Hud_DrawInvis(pup_pos);
+		pup_pos_y -= 17;
+	}
+	if (stat_items & IT_INVULNERABILITY) {
+		Hud_DrawInvuln(pup_pos);
+		pup_pos_y -= 17;
+	}
+	if (stat_items & IT_QUAD) {
+		Hud_DrawQuad(pup_pos);
+		pup_pos_y -= 17;
+	}
+};
+
+void(vector pos) Hud_DrawVkQuake_Right =
+{
+	vector base_pos;
+	float value;
+
+	// Anchor bottom right
+	base_pos = pos + '0 -40 0';
+
+	// draw primary ammo, right-aligned
+	// draw reserve ammo, left-aligned
+
+	// Primary ammo
+	value = clampf(getstatf(STAT_AMMO), 999);
+	if (getstatf(STAT_CLIP_STATUS) == ClipStatus::Primary) {
+		Hud_DrawLargeValue(base_pos + '-48 0 0', value, 1, Align::Right);
+		Hud_DrawSmallNum(base_pos + '-42 14', getstatf(STAT_RESERVE_AMMO), Align::Left);
+	}
+	else {
+		Hud_DrawLargeValue(base_pos + '-18 0 0', value, 1, Align::Right);
+	}
+	
+	// Hud_DrawCurrentAmmoIcon(base_pos + '-40 0 0');
+
+	// Keys, above ammo
+	vector key_pos = base_pos + '-48 -17 0'; 
+	
+	if (stat_items & IT_KEY1) {
+		Hud_DrawKeys(key_pos, IT_KEY1);
+		key_pos_x -= 16; 
+	}
+	if (stat_items & IT_KEY2) {
+		Hud_DrawKeys(key_pos, IT_KEY2);
+	}
+	
+	// Sigils, left of keys/ammo
+	Hud_DrawSigils(base_pos + '-60 -17 0');
+};
+
+void(vector screensize) Hud_DrawVkQuake_Weapons =
+{
+	vector pos;
+	
+	// 1. Small Inventory Ammo Counts
+	// Anchored relative to Bottom Right to stay aligned with main ammo
+	// Adjusted for the -40 base height of the main HUD
+	pos = [screensize_x - 120, screensize_y - 68]; 
+	
+	if (baralpha > 0) {
+		// Draw dim backgrounds
+		drawsubpic(pos, '104 10', "ibar", '0 0', '0.416 0.416', '1 1 1', baralpha); 
+		drawsubpic(pos + '0 10', '104 10', "ibar", '0 0', '0.416 0.416', '1 1 1', baralpha);
+	}
+
+	// Draw Values
+	// Hud_DrawSmallNum(pos + '20 42', getstatf(STAT_RESERVE_AMMO), Align::Right);
+	// Hud_DrawSmallNum(pos + '63 -24', getstatf(STAT_NAILS), Align::Right);
+	// Hud_DrawSmallNum(pos + '11 -14', getstatf(STAT_ROCKETS), Align::Right);
+	// Hud_DrawSmallNum(pos + '63 -14', getstatf(STAT_CELLS), Align::Right);
+
+	// 2. Vertical Weapon List
+	// Stacks upwards from ~60% screen height
+	// pos = [screensize_x, screensize_y * 0.60]; 
+	
+	// currweap = getstatf(STAT_ACTIVEWEAPON);
+	// offset = 0;
+
+	// for (i = 0; i < 7; i++)
+	// {
+	// 	if (stat_items & weaponflags[i])
+	// 	{
+	// 		x_active = 0;
+	// 		if (currweap == weaponflags[i]) x_active = 8; // Shift active left
+				
+	// 		float fram = HUD_FlashTime(i);
+	// 		if (currweap == weaponflags[i] && fram == 0) fram = 1; // Constant glow if active
+
+	// 		string pic = strcat(weaponflash[fram], weaponlabel[i]);
+			
+	// 		// Draw weapon icon (24x16), shifting up by offset
+	// 		// 16(padding) + 24(width) + x_active(shift)
+	// 		drawpic(pos + [-(40 + x_active), -offset], pic, '24 16', '1 1 1', 1, 0);
+			
+	// 		offset += 16;
+	// 	}
+	// }
+};
+void(vector screensize, float scoreboard) CSQC_DrawHud =
+{
+	HUD_UpdateStats();
+	
+	if (intermission || coopdata == -1) return;
+
+	// --- SCOREBOARD OVERLAY ---
+	// If the user holds TAB or is dead, show the scoreboard.
+	// In vkQuake style, we usually hide the main HUD during scoreboard 
+	// unless the screen is very wide.
+	if (scoreboard || stat_health <= 0)
+	{
+		Hud_DrawLevelInfoBar([screensize_x / 2, screensize_y] - '160 24');
+		
+		if (deathmatch)
+		{
+			Hud_DrawRankings([screensize_x / 2 - 160, screensize_y / 2 - 120]);
+		}
+		else if (screensize_x >= 500 && stat_health > 0)
+		{
+			// Wide screen: Keep HUD visible on sides
+			Hud_DrawVkQuake_Left([0, screensize_y]);
+			Hud_DrawVkQuake_Right([screensize_x, screensize_y]);
+		}
+		return;
+	}
+	
+	// --- DRAW MAIN HUD ---
+	
+	// 1. Left Cluster (Health, Armor, Powerups)
+	Hud_DrawVkQuake_Left([0, screensize_y]);
+	
+	// 2. Right Cluster (Ammo, Keys, Sigils)
+	Hud_DrawVkQuake_Right([screensize_x, screensize_y]);
+	
+	// 3. Weapon List & Inventory (Only if screen is large enough to fit it)
+	// if (screensize_x > 320)
+	// 	Hud_DrawVkQuake_Weapons(screensize);
+	
+	// 4. Multiplayer Names (Top Left)
+	if (deathmatch || coop)
+		Hud_DrawMultiplayer([0, 112], '0 12', MP_MEDIUM);
+};

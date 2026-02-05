@@ -311,8 +311,13 @@ void() army_fire =
 	// lunaran: moved multidamage here
 	ClearMultiDamage ();
 	// w_fire(b_soldiershotgun);
-	w_ctx = b_soldiershotgun;
-	fire_bullet (dir);
+	self.w_ctx = b_soldiershotgun;
+	vector base_offset = wcvar_vec(self.w_ctx.name, "origin_base_offset");
+	float angle_change = wcvar(self.w_ctx.name, "origin_angle_change");
+	float angle_offset = wcvar(self.w_ctx.name, "origin_angle_offset");
+	float circle_radius = wcvar(self.w_ctx.name, "origin_circle_radius");
+	vector origin = origin_bullet(base_offset, angle_change, angle_offset, circle_radius);
+	fire_bullet (origin, dir);
 	ApplyMultiDamage ();
 }
 
@@ -390,7 +395,7 @@ void() rocketeer_fire =
 		speed = 900;
 	else
 		speed = 800;
-	launch_rockets (org, dir * speed, 1, rocketeer_missile_touch);
+	launch_rocket (org, dir * speed, 1, rocketeer_missile_touch);
 }
 
 

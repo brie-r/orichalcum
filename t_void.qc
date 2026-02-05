@@ -15,9 +15,9 @@ thus, a func_void:
 - Creates another trigger a specified height above itself that fades out players' view 
 	when they fall through it
 
-A player's screen has fully faded to black by the time he hits the ghost, so he doesn't
-see the trash underneath.  Since he doesn't know he's not still falling, we can hold him 
-in stasis for a little while longer before we splat him, to imply the pit is deeper than 
+A player's screen has fully faded to black by the time they hit the ghost, so they don't
+see the trash underneath.  Since they don't know they're not still falling, we can hold them 
+in stasis for a little while longer before we splat them, to imply the pit is deeper than 
 it really is (often not that deep).
 
 ===============
@@ -278,7 +278,7 @@ void() void_fall_unplunge =
 
 // --------------------------------
 // void_fallthink
-// timer for fading out the player's view as he's falling
+// timer for fading out the player's view as they're falling
 // --------------------------------
 void() void_fallthink =
 {

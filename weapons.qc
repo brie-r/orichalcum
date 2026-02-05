@@ -330,29 +330,33 @@ void() W_SetIdleWeaponFrame =
 void() W_SetCurrentAmmo =
 {
 	self.items = self.items - ( self.items & (IT_SHELLS | IT_NAILS | IT_ROCKETS | IT_CELLS) );
-	
-	if (self.weapon == IT_SHOTGUN || self.weapon == IT_SUPER_SHOTGUN)
-	{
-		self.currentammo = self.ammo_shells;
+	reserve_ammo = w_reserve_ammo();
+	primary_ammo = w_primary_ammo();
+	// dprint(ftos(self.(w_primary_ammo())));
+	// dprint("\n");
+	ClipStatus clip_status = check_clip_status();
+	switch (clip_status) {
+		case ClipStatus::Primary: break;
+		case ClipStatus::Reserve: primary_ammo = reserve_ammo; break;
+		case ClipStatus::Error: dprint("Clip Status Error"); return;
+	}
+	self.currentammo = self.primary_ammo;
+
+	if (self.weapon == IT_SHOTGUN || self.weapon == IT_SUPER_SHOTGUN) {
 		self.items = self.items | IT_SHELLS;
 	}
-	else if (self.weapon == IT_NAILGUN || self.weapon == IT_SUPER_NAILGUN)
-	{
-		self.currentammo = self.ammo_nails;
+	else if (self.weapon == IT_NAILGUN || self.weapon == IT_SUPER_NAILGUN) {
 		self.items = self.items | IT_NAILS;
 	}
-	else if (self.weapon == IT_GRENADE_LAUNCHER || self.weapon == IT_ROCKET_LAUNCHER)
-	{
-		self.currentammo = self.ammo_rockets;
+	else if (self.weapon == IT_GRENADE_LAUNCHER || self.weapon == IT_ROCKET_LAUNCHER) {
 		self.items = self.items | IT_ROCKETS;
 	}
-	else if (self.weapon == IT_LIGHTNING)
-	{
+	else if (self.weapon == IT_LIGHTNING) {
 		self.currentammo = self.ammo_cells;
 		self.items = self.items | IT_CELLS;
 	}
-	else	// axes, etc
-	{
+	// axes, etc
+	else {
 		self.currentammo = 0;
 	}
 }
@@ -365,25 +369,40 @@ void() W_ResetWeaponState =
 	//self.attack_finished = 0;	// don't lose attack debounce time from last attack,
 		// if any, or picking up/switching weapons can cause double attacks
 	
-	if (self.weapon == IT_AXE )
+	if (self.weapon == IT_AXE ) {
 		self.weaponmodel = "progs/v_axe2.mdl";
-	else if (self.weapon == IT_SHOTGUN)
+	}
+	else if (self.weapon == IT_SHOTGUN) {
 		self.weaponmodel = "progs/v_shot.mdl";
-	else if (self.weapon == IT_SUPER_SHOTGUN)
+		self.w_ctx = b_shotgun;
+	}
+	else if (self.weapon == IT_SUPER_SHOTGUN) {
 		self.weaponmodel = "progs/v_shot2.mdl";
-	else if (self.weapon == IT_NAILGUN)
+		self.w_ctx = b_supershotgun;
+	}
+	else if (self.weapon == IT_NAILGUN) {
 		self.weaponmodel = "progs/v_nail.mdl";
-	else if (self.weapon == IT_SUPER_NAILGUN)
+		self.w_ctx = b_nailgun;
+	}
+	else if (self.weapon == IT_SUPER_NAILGUN) {
 		self.weaponmodel = "progs/v_nail2.mdl";
-	else if (self.weapon == IT_GRENADE_LAUNCHER)
+		self.w_ctx = b_perforator;
+	}
+	else if (self.weapon == IT_GRENADE_LAUNCHER) {
 		self.weaponmodel = "progs/v_rock.mdl";
-	else if (self.weapon == IT_ROCKET_LAUNCHER)
+		self.w_ctx = b_grenadelauncher;
+	}
+	else if (self.weapon == IT_ROCKET_LAUNCHER) {
 		self.weaponmodel = "progs/v_rock2.mdl";
+		self.w_ctx = b_rocketlauncher;
+	}
 		// self.weaponmodel = "progs/g_claw.mdl";
-	else if (self.weapon == IT_LIGHTNING)
+	else if (self.weapon == IT_LIGHTNING) {
 		self.weaponmodel = "progs/v_light.mdl";
-	else
+	}
+	else {
 		self.weaponmodel = string_null;
+	}
 
 	W_SetCurrentAmmo();
 }
@@ -402,14 +421,15 @@ This should be the only function that changes .weapon
 */
 float(float weap) W_Select =
 {
+
 	if (weap)
 	{
 		if (self.weapon == weap) return TRUE;
 		if (self.items & weap == 0) return FALSE;
 		if (!W_HasAmmo(weap)) return FALSE;
 		self.attack_state = self.weapon;
+		self.reload_end_time = __NULL__;
 	}
-
 	self.weapon = weap;
 	W_ResetWeaponState();
 	return TRUE;
@@ -457,10 +477,11 @@ void() W_Attack =
 	else if (self.weapon == IT_SUPER_SHOTGUN) {
 		w_fire(b_supershotgun);
 	}
-	else if (self.weapon == IT_NAILGUN || self.weapon == IT_SUPER_NAILGUN)
-	{
-		player_nail();
-		W_FireSpikes ();
+	else if (self.weapon == IT_NAILGUN)	{
+		w_fire(b_nailgun);
+	}
+	else if (self.weapon == IT_SUPER_NAILGUN) {
+		w_fire(b_perforator);
 	}
 	else if (self.weapon == IT_GRENADE_LAUNCHER) {
 		w_fire(b_grenadelauncher);
@@ -468,7 +489,6 @@ void() W_Attack =
 	else if (self.weapon == IT_ROCKET_LAUNCHER) {
 		w_fire(b_rocketlauncher);
 	}
-
 	else if (self.weapon == IT_LIGHTNING)
 	{
 		player_light1();
@@ -486,8 +506,18 @@ Called every frame so impulse events can be handled as well as possible
 */
 void() W_WeaponFrame =
 {
+	// if (self.last_reload_end_time != self.reload_end_time) {
+	// 	dprint(ftos(self.reload_end_time));
+	// 	dprint("\n");
+	// 	self.last_reload_end_time = self.reload_end_time;
+	// }
 	if (self.impulse)
 		ImpulseCommands();
+		
+	if (self.reload_end_time != __NULL__ && time >= self.reload_end_time) {
+		w_reload_end();
+	}
+
 	if (time < self.attack_finished)
 		return;
 

@@ -263,6 +263,9 @@ const float STAT_ITEMS 			= 15;	// self.items | (self.items2<<23)
 										// getstatbits(STAT_ITEMS,28,4) to read the visible part 
 										// of serverflags, whichever is applicable
 const float STAT_VIEWHEIGHT		= 16;	// player.view_ofs_z
+const float STAT_PRIMARY_AMMO	= 17;
+const float STAT_RESERVE_AMMO	= 18;
+const float STAT_CLIP_STATUS	= 19;
 const float STAT_VIEW2			= 20;	// This stat contains the number of the entity in the server's .view2 field
 const float STAT_VIEWZOOM		= 21;	// Scales fov and sensitivity. Part of DP_VIEWZOOM
 const float STAT_IDEALPITCH		= 25;

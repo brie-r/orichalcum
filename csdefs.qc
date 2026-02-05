@@ -16,16 +16,16 @@ You will probably need to use FTEQCC to compile this.
 #endif
 #endif
 
-// void() main = {};
-// void() StartFrame = {};
-// void() PlayerPreThink = {};
-// void() PlayerPostThink = {};
-// void() ClientKill = {};
-// void() ClientConnect = {};
-// void() PutClientInServer = {};
-// void() ClientDisconnect = {};
-// void() SetNewParms = {};
-// void() SetChangeParms = {};
+void() main = {};
+void() StartFrame = {};
+void() PlayerPreThink = {};
+void() PlayerPostThink = {};
+void() ClientKill = {};
+void() ClientConnect = {};
+void() PutClientInServer = {};
+void() ClientDisconnect = {};
+void() SetNewParms = {};
+void() SetChangeParms = {};
 
 //Some custom types (that might be redefined as accessors by fteextensions.qc, although we don't define any methods here)
 #ifdef _ACCESSORS

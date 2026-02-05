@@ -4,6 +4,7 @@
 //#define NO_CSQC 1		// uncomment for a CSQC-less build
 
 defs.qc
+shareddefs.qc
 constants.qc
 
 maths.qc

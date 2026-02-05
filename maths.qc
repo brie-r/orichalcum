@@ -2,7 +2,7 @@
 //	MATHS.
 // ===================
 
-float mathlib_accuracy; //accuracy of sqrt & pow
+// float mathlib_accuracy; //accuracy of sqrt & pow
 float DEG2RAD = 0.0174532925199432957692369076848861271344287188854172545609719144;
 float RAD2DEG = 57.2957795130823208767981548141051703324054724665643215491602438612;
 float PI      = 3.1415926535897932384626433832795028841971693993751058209749445923;
@@ -55,36 +55,36 @@ vector(float num) SinCos =
 	return result;
 }
 
-float(float num) sin =
-{
-	vector temp;
-	temp = SinCos(num);
-	return temp_x;
-}
+// float(float num) sin =
+// {
+// 	vector temp;
+// 	temp = SinCos(num);
+// 	return temp_x;
+// }
 
-float(float num) cos =
-{
-	vector temp;
-	temp = SinCos(num);
-	return temp_y;
-}
+// float(float num) cos =
+// {
+// 	vector temp;
+// 	temp = SinCos(num);
+// 	return temp_y;
+// }
 
-float(float num) tan =
-{
-	vector temp;
-	temp = SinCos(num);
-	if (temp_y == 0) return A_SHITLOAD;	// to infinity and beyond
-	return temp_x / temp_y;
-}
+// float(float num) tan =
+// {
+// 	vector temp;
+// 	temp = SinCos(num);
+// 	if (temp_y == 0) return A_SHITLOAD;	// to infinity and beyond
+// 	return temp_x / temp_y;
+// }
  
-float(float y, float x) atan2 =
-{
-	local vector ang; //temporary used to calculate trig values
-	ang = '0 0 0';
-	ang_x = x;
-	ang_y = y;
-	return vectoyaw(ang);
-}
+// float(float y, float x) atan2 =
+// {
+// 	local vector ang; //temporary used to calculate trig values
+// 	ang = '0 0 0';
+// 	ang_x = x;
+// 	ang_y = y;
+// 	return vectoyaw(ang);
+// }
 
 vector(vector a, vector b) CrossProduct =
 {
@@ -226,8 +226,8 @@ float(vector ang) is_angular =
 	return (fabs(ang_x) > 1 || fabs(ang_y) > 1 || fabs(ang_z) > 1);
 }
 
-float(float a, float b) min = { if (a <= b) return a; return b; }
-float(float a, float b) max = { if (a >= b) return a; return b; }
+// float(float a, float b) min = { if (a <= b) return a; return b; }
+// float(float a, float b) max = { if (a >= b) return a; return b; }
 float(float a, float mn, float mx) clamp = { if (a >= mx) return mx; if (a <= mn) return mn; return a; }
 float(float a) saturate = { return clamp(a, 0, 1); }
 
@@ -310,16 +310,16 @@ float(float base, float exp) ipow =
 // the following are by any one of the following people:
 // frikac, preach, kashua, lordhavoc, sock
 
-float(float a, float b) mod =
-{
-	return a - (floor(a / b) * b);
-}
+// float(float a, float b) mod =
+// {
+// 	return a - (floor(a / b) * b);
+// }
 
-//faster version of id's anglemod
-float(float v) anglemod =
-{
-	return v - floor(v/360) * 360;
-}
+// //faster version of id's anglemod
+// float(float v) anglemod =
+// {
+// 	return v - floor(v/360) * 360;
+// }
 
 float(float anga, float angb) angledif =
 {
@@ -331,26 +331,26 @@ float(float anga, float angb) angledif =
 }
 
 // mathlib_sqrt
-float(float num) sqrt =
-{
-	local float apr;
+// float(float num) sqrt =
+// {
+// 	local float apr;
 
-	if(mathlib_accuracy <= 0)
-		mathlib_accuracy = 0.001;   //this sets a level of accuracy, it's a global float
+// 	if(mathlib_accuracy <= 0)
+// 		mathlib_accuracy = 0.001;   //this sets a level of accuracy, it's a global float
 
-	if (num < mathlib_accuracy)
-		return 0;
-	if (num>1)
-		apr = num;
-	else
-		apr = 1;
-	do
-	{
-		apr = (num + (apr * apr)) / (2 * apr);
-	}
-	while (fabs((apr * apr) - num) > (num * mathlib_accuracy));
-	return apr;
-}
+// 	if (num < mathlib_accuracy)
+// 		return 0;
+// 	if (num>1)
+// 		apr = num;
+// 	else
+// 		apr = 1;
+// 	do
+// 	{
+// 		apr = (num + (apr * apr)) / (2 * apr);
+// 	}
+// 	while (fabs((apr * apr) - num) > (num * mathlib_accuracy));
+// 	return apr;
+// }
 
 // reflect incident over normal, dampening it against the normal
 vector(vector incident, vector normal, float dampening) reflect = {
@@ -363,19 +363,3 @@ vector(vector incident, vector normal, float dampening) reflect = {
 
 	return reflected - d * dampening * normal;
 };
-vector (vector spread) cone_spread {
-	float rotation = random() * TAU;
-	vector circle = Vector(0, cos(rotation), sin(rotation));
-	float pitch = random() * sin(spread_y * DEG2RAD * random());
-	vector vec_2d = rotateVectorAround(circle, '1 0 0', rotation);
-	float fwd = sqrt(1 - pow(circle_x, 2) - pow(circle_y, 2));
-	vector vec_3d = Vector(vec_2d_y, vec_2d_x, fwd);
-	return vec_3d;
-
-
-	// spread * 0.5 * DEG2RAD * crandom();
-	// vector relative = spread * 0.5 * random();
-	// vector rotation = 360 * random;
-	// pow()
-	
-}

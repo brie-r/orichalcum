@@ -2,6 +2,7 @@ const b_weapon b_shotgun = {
 	.name = "shotgun",
 	.fn_fire = fire_bullet,
 	.fn_vfx = player_shot1,
+	.fn_origin = origin_bullet,
 
 	.fn_spread = SpreadOval,
 	.fn_low_ammo = NoOpEnd,
@@ -18,6 +19,7 @@ const b_weapon b_soldiershotgun = {
 	.name = "soldiershotgun",
 	.fn_fire = fire_bullet,
 	.fn_vfx = player_shot1,
+	.fn_origin = origin_bullet,
 
 	.fn_spread = SpreadOval,
 	.fn_low_ammo = NoOpEnd,
@@ -34,9 +36,10 @@ const b_weapon b_supershotgun = {
 	.name = "supershotgun",
 	.fn_fire = fire_bullet,
 	.fn_vfx = player_shot1,
+	.fn_origin = origin_bullet,
 
 	.fn_spread = SpreadOval,
-	.fn_low_ammo = SuperShotgunLowAmmo,
+	.fn_low_ammo = supershotgun_low_ammo,
 	.fn_no_ammo = NoOpEnd,
 
 	.fn_hit_alive = TraceHitAlive,
@@ -51,7 +54,7 @@ void() NoOpVoid {}
 Branch() NoOpContinue { return Branch::Continue; }
 Branch() NoOpEnd { return Branch::End; }
 
-float() SuperShotgunLowAmmo {
+float() supershotgun_low_ammo {
 	if (self.items & IT_SHOTGUN) w_fire(b_shotgun);
 	return FALSE;
 }
@@ -104,36 +107,33 @@ HitOutcome(entity ignore_ent, float penetrations) HitBranch {
 	if (penetrations == 0) return HitOutcome::Inanimate;
 	return HitOutcome::End;
 }
-void(vector dir) fire_bullet {
-	vector dir_with_spread;
+void(vector origin, vector dir_with_spread) fire_bullet {
+	// vector spread = wcvar_vec(self.w_ctx.name, "spread");
+	// float shot_count = wcvar(self.w_ctx.name, "shot_count");
 
-	vector spread = wcvar_vec(w_ctx.name, "spread");
-	float shot_count = wcvar(w_ctx.name, "shot_count");
-
-	if (shot_count <= 0) return;
+	// if (shot_count <= 0) return;
 	
-	makevectors(self.v_angle);
-	dir = aim (self, AUTOAIM_DIST);
-	vector shot_origin = bullet_origin();
+	// makevectors(self.v_angle);
+	// dir = aim (self, AUTOAIM_DIST);
 
-	if (trace_debug) dprint3("*** firing ", ftos(shot_count), " bullets *\n\n");
 	ClearMultiDamage ();
-	for (float shot = 0; shot < shot_count; shot++)
-	{
-		dir_with_spread = w_ctx.fn_spread(dir, spread);
-		TraceHitscan(shot_origin, dir_with_spread, self);
-	}
+	// for (float shot = 0; shot < shot_count; shot++)
+	// {
+		// dir_with_spread = self.w_ctx.fn_spread(dir, spread);
+		TraceHitscan(origin, dir_with_spread, self);
+	// }
 	ApplyMultiDamage ();
 }
 void(vector origin, vector dir_with_spread, entity initial_ignore) TraceHitscan {
+	float dmg, dmg_dead;
 	vector destination;
 	entity ignore_ent = initial_ignore;
 	// penetrate dead enemies, but deal damage to potentially gib
 	for (float penetrations = 0; penetrations <= 8; penetrations++)
 	{
 		// dmg_dead: sum half original damage, half original damage as spread, half original spread?
-		float dmg = wcvar_spread(w_ctx.name, "dmg");
-		float dmg_dead = 0.5 * (dmg + dmg * random());
+		dmg = wcvar_spread(self.w_ctx.name, "dmg");
+		dmg_dead = 0.5 * (dmg + dmg * random());
 		destination = origin + dir_with_spread * 2048;
 		traceline2(origin, destination, ignore_ent, 0);
 		HitOutcome outcome = HitBranch(ignore_ent, penetrations);
@@ -148,16 +148,16 @@ void(vector origin, vector dir_with_spread, entity initial_ignore) TraceHitscan 
 }
 Branch(HitOutcome outcome, float dmg, float dmg_dead, vector dir_with_spread) hit_callbacks {
 	switch (outcome) {
-		case HitOutcome::Dead: return w_ctx.fn_hit_dead(dmg_dead, dir_with_spread);
-		case HitOutcome::Ignore: return w_ctx.fn_hit_ignore(dmg, dir_with_spread);
-		case HitOutcome::Alive: return w_ctx.fn_hit_alive(dmg, dir_with_spread);
-		case HitOutcome::Inanimate: return w_ctx.fn_hit_inanimate(dmg, dir_with_spread);
-		case HitOutcome::Damageable: return w_ctx.fn_hit_damageable(dmg, dir_with_spread);
-		case HitOutcome::End: return w_ctx.fn_hit_end(dmg, dir_with_spread);
+		case HitOutcome::Dead: return self.w_ctx.fn_hit_dead(dmg_dead, dir_with_spread);
+		case HitOutcome::Ignore: return self.w_ctx.fn_hit_ignore(dmg, dir_with_spread);
+		case HitOutcome::Alive: return self.w_ctx.fn_hit_alive(dmg, dir_with_spread);
+		case HitOutcome::Inanimate: return self.w_ctx.fn_hit_inanimate(dmg, dir_with_spread);
+		case HitOutcome::Damageable: return self.w_ctx.fn_hit_damageable(dmg, dir_with_spread);
+		case HitOutcome::End: return self.w_ctx.fn_hit_end(dmg, dir_with_spread);
 	}
 	return Branch::End;
 }
-vector() bullet_origin {
+vector(vector _1, float _2, float _3, float _4) origin_bullet {
 	vector shot_origin = self.origin + v_forward * 10;
 	shot_origin_z = self.absmin_z + self.size_z * 0.7;
 	return shot_origin;
