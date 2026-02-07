@@ -108,21 +108,7 @@ HitOutcome(entity ignore_ent, float penetrations) HitBranch {
 	return HitOutcome::End;
 }
 void(vector origin, vector dir_with_spread) fire_bullet {
-	// vector spread = wcvar_vec(self.w_ctx.name, "spread");
-	// float shot_count = wcvar(self.w_ctx.name, "shot_count");
-
-	// if (shot_count <= 0) return;
-	
-	// makevectors(self.v_angle);
-	// dir = aim (self, AUTOAIM_DIST);
-
-	ClearMultiDamage ();
-	// for (float shot = 0; shot < shot_count; shot++)
-	// {
-		// dir_with_spread = self.w_ctx.fn_spread(dir, spread);
-		TraceHitscan(origin, dir_with_spread, self);
-	// }
-	ApplyMultiDamage ();
+	TraceHitscan(origin, dir_with_spread, self);
 }
 void(vector origin, vector dir_with_spread, entity initial_ignore) TraceHitscan {
 	float dmg, dmg_dead;

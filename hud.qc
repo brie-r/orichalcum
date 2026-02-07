@@ -1021,6 +1021,7 @@ void(vector pos) Hud_DrawVkQuake_Left {
 	value = clampf(stat_health, 999);
 	Hud_DrawLargeValue(base_pos + '18 0 0', value, 25, Align::Left); 
 
+
 	// Draw armor above health (25 above face)
 	float armor_val = getstatf(STAT_ARMOR);
 	float armor_active = (stat_items & IT_INVULNERABILITY) || (armor_val > 0);
@@ -1072,10 +1073,9 @@ void(vector pos) Hud_DrawVkQuake_Right =
 	// Anchor bottom right
 	base_pos = pos + '0 -40 0';
 
-	// draw primary ammo, right-aligned
-	// draw reserve ammo, left-aligned
 
-	// Primary ammo
+	// primary ammo, left side, right-aligned
+	// reserve ammo, left side, right-aligned
 	value = clampf(getstatf(STAT_AMMO), 999);
 	if (getstatf(STAT_CLIP_STATUS) == ClipStatus::Primary) {
 		Hud_DrawLargeValue(base_pos + '-48 0 0', value, 1, Align::Right);

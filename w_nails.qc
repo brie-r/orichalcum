@@ -91,31 +91,19 @@ void(vector origin, vector dir_with_spread) fire_perforator {
 		self.cnt = 0;
 	}
 
-
-	float nail = self.shot_num % 2;
-
-
-	// vector spread = wcvar_vec("perforator", "spread");
-	// float speed1 = wcvar_spread("perforator_nail", "speed1");
-	// float speed2 = wcvar_spread("perforator_nail", "speed2");
-	// vector dir1 = SpreadOval(v_forward, spread);
-	// vector dir2 = SpreadOval(v_forward, spread);
-	// float index = w_ctx.count % 2;
-	// float speed = wcvar(w_ctx.name, strcat("speed", ftos(index)));
+	float nail_num = self.shot_num % 2;
 	float speed = wcvar_spread("perforator_nail", "speed");
-	entity spike1 = launch_nail(origin, dir_with_spread * speed);
-	
-	
-	// entity spike1 = launch_nail(origin, dir_with_spread * speed);
-	// entity spike2 = launch_nail(origin, dir_with_spread * speed);
-	// entity spike1 = launch_nail(origin_circle('0 11 16', 135, 45, 1.25), dir1 * speed1);
-	// entity spike2 = launch_nail(origin_circle('0 11 16', 135, 45, 1.25), dir2 * speed2);
+	speed += (nail_num * 2 - 1) * 40 + random(30);
+	entity nail = launch_nail(origin, dir_with_spread * speed);
 	
 	// weaken the SNG at long distance while keeping the spread under control
-	spike1.think = spike_unfatten;
-	// spike2.think = spike_unfatten;
-	spike1.nextthink = time + 0.25;
-	// spike2.nextthink = time + 0.3;
+	nail.think = spike_unfatten;
+	if (nail_num == 0) {
+		nail.nextthink = time + 0.25;
+	}
+	else {
+		nail.nextthink = time + 0.3;
+	}
 	
 	if (has_quad(self))
 	{
@@ -126,24 +114,21 @@ void(vector origin, vector dir_with_spread) fire_perforator {
 		
 		// the dumb solution is to make one nail do 0 dmg and the other do 18 in quad mode
 		//   so the math works out like the old math and the quad SNG still feels right
-		spike1.dmg = wcvar("perforator", "dmg") * 2;
-		// spike2.dmg = wcvar_spread("perforator", "dmg1");
-		spike1.buddy = spike1;
-		// spike2.buddy = spike2;
+		nail.dmg = wcvar("perforator", "dmg") * 2;
+		if (self.buddy_requested == __NULL__) {
+			self.buddy_requested = nail;
+		}
+		else {
+			self.buddy_requested.buddy = nail;
+			nail.buddy = self.buddy_requested;
+		}
 		// first one to hit does its damage and then nerfs its 'buddy'
 	}
-	// self.cnt += 1;
-}
-
-void(b_weapon weapon) fire_nailgun {
-	// launch_nail(origin, dir_with_spread * speed);
-	// self.cnt = cycle(self.cnt,8);
 }
 float() perforator_low_ammo {
 	if (self.items & IT_NAILGUN) w_fire(b_nailgun);
 	return FALSE;
 }
-
 float() CheckValidSpikeTouch {
 	if (other == self.owner) return FALSE;
 	if (other.solid == SOLID_TRIGGER) return FALSE;

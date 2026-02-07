@@ -30,6 +30,8 @@ void() init_cvars
 	autocvar(w_nailgun_ammo_type, "nails");
 	autocvar(w_nailgun_ammo_cost, 1);
 	autocvar(w_nailgun_attack_delay, 0.09);
+	autocvar(w_nailgun_dmg, 9);
+	autocvar(w_nailgun_splash_dmg, 0);
 	autocvar(w_nailgun_spread, '0 0 0');
 	autocvar(w_nailgun_sfx_fire, "weapons/rocket1i.wav");
 	
@@ -42,9 +44,6 @@ void() init_cvars
 	autocvar(w_nailgun_origin_angle_offset, 0);
 	autocvar(w_nailgun_origin_circle_radius, 2.5);
 
-	// autocvar(w_nailgun_dmg1, 0);
-	// autocvar(w_nailgun_dmg2, 0);
-	// autocvar(w_nailgun_dmg_spread, 0);
 	autocvar(w_nailgun_shot_count, 1);
 	autocvar(w_nailgun_clip_size, 0);
 	autocvar(w_nailgun_reload_delay_first, 0);
@@ -52,13 +51,11 @@ void() init_cvars
 
 	autocvar(w_perforator_fn_fire, "perforator_nail");
 	autocvar(w_perforator_fn_spread, "oval");
-	autocvar(w_perforator0_dmg_spread, 0);
-	autocvar(w_perforator1_dmg_spread, 0);
 	autocvar(w_perforator_ammo_type, "nails");
 	autocvar(w_perforator_ammo_cost, 2);
 	autocvar(w_perforator_attack_delay, 0.09);
-	autocvar(w_perforator_splash_dmg, 0);
 	autocvar(w_perforator_dmg, 9);
+	autocvar(w_perforator_splash_dmg, 0);
 	// autocvar(w_perforator_spread, '2.292 2.292 0');
 	// perforator spread definitely converted wrong
 	// redo someday

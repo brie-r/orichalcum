@@ -40,6 +40,7 @@ typedef struct {
 
 void(b_weapon weapon) w_fire {
 
+	self.buddy_requested = __NULL__;
 	self.shot_num = 0;
 
 	self.w_ctx = weapon;
@@ -86,6 +87,7 @@ void(b_weapon weapon) w_fire {
 
 	self.w_ctx.fn_origin = wcvar_fn_origin();
 	self.w_ctx.fn_spread = wcvar_fn_spread();
+
 	self.w_ctx.fn_fire = wcvar_fn_fire();
 
 	float shot_count = wcvar(self.w_ctx.name, "shot_count");
@@ -94,12 +96,14 @@ void(b_weapon weapon) w_fire {
 	float angle_offset = wcvar(self.w_ctx.name, "origin_angle_offset");
 	float circle_radius = wcvar(self.w_ctx.name, "origin_circle_radius");
 	vector spread = wcvar_vec(self.w_ctx.name, "spread");
+	ClearMultiDamage ();
 	for (float shot = 0; shot < shot_count; shot++) {
 		vector origin = self.w_ctx.fn_origin(base_offset, angle_change, angle_offset, circle_radius);
 		vector dir_with_spread = self.w_ctx.fn_spread(dir, spread);
 		self.w_ctx.fn_fire(origin, dir_with_spread);
 		self.shot_num += 1;
 	}
+	ApplyMultiDamage ();
 	
 	self.currentammo = self.primary_ammo;
 	if (clip_status == ClipStatus::Primary && self.primary_ammo == 0) {

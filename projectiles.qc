@@ -428,8 +428,9 @@ entity(vector org, vector vel) launch_nail =
 	spike = launch_projectile(org, vel, "spike");
 	spike.touch = spike_touch;
 	
-	SUB_ChangeModel (spike, "progs/spike.mdl");	
+	SUB_ChangeModel (spike, "progs/spike.mdl");
 	spike.dmg = 9;
+	// spike.dmg = wcvar(w_ctx.name, "dmg");
 	
 	return spike;
 }
