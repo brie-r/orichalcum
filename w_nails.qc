@@ -60,49 +60,35 @@ void(float damage) spawn_touchblood =
 
 // --------------------------------
 
-vector(
-	vector base_offset,
-	float angle_change,
-	float angle_offset,
-	float circle_radius
-) origin_circle {
-	float angle = angle_change * self.cnt + angle_offset;
-	vector offset = Vector(cos(angle * DEG2RAD), 0, sin(angle * DEG2RAD)) * circle_radius;
-	return (self.origin +
-		(base_offset_x + offset_x) * v_right +
-		base_offset_y * v_forward + 
-		(base_offset_z + offset_z) * v_up);
-}
-
-void(vector origin, vector dir_with_spread) W_FireNailgun {
+entity (vector origin, vector dir_with_spread) W_FireNailgun {
 	// default sv_maxvelocity is 2000, any higher leads to weird
 	// angular offsets caused by clamping the velocity
 	if (self.cnt >= 2) {
 		self.cnt = 0;
 	}
-	float speed = wcvar_spread("nail", "speed");
-	launch_nail(origin, dir_with_spread * speed);
+	vector vel = local_to_world(wcvar_vec(self.w_ctx.name, "vel"), dir_with_spread);
+	return launch_nail(origin, vel);
 }
 
 void() spike_unfatten { self.movetype = MOVETYPE_FLY; }
 
-void(vector origin, vector dir_with_spread) fire_perforator {
+entity(vector origin, vector dir_with_spread) fire_perforator {
 	if (self.cnt >= 8) {
 		self.cnt = 0;
 	}
 
 	float nail_num = self.shot_num % 2;
-	float speed = wcvar_spread("perforator_nail", "speed");
-	speed += (nail_num * 2 - 1) * 40 + random(30);
-	entity nail = launch_nail(origin, dir_with_spread * speed);
+	vector vel = wcvar_vec(self.w_ctx.name, "vel");
+	vel.x += (nail_num * 2 - 1) * 40 + random(30);
+	entity projectile = launch_nail(origin, vel);
 	
 	// weaken the SNG at long distance while keeping the spread under control
-	nail.think = spike_unfatten;
+	projectile.think = spike_unfatten;
 	if (nail_num == 0) {
-		nail.nextthink = time + 0.25;
+		projectile.nextthink = time + 0.25;
 	}
 	else {
-		nail.nextthink = time + 0.3;
+		projectile.nextthink = time + 0.3;
 	}
 	
 	if (has_quad(self))
@@ -114,19 +100,20 @@ void(vector origin, vector dir_with_spread) fire_perforator {
 		
 		// the dumb solution is to make one nail do 0 dmg and the other do 18 in quad mode
 		//   so the math works out like the old math and the quad SNG still feels right
-		nail.dmg = wcvar("perforator", "dmg") * 2;
+		projectile.dmg = wcvar(self.w_ctx.name, "dmg") * 2;
 		if (self.buddy_requested == __NULL__) {
-			self.buddy_requested = nail;
+			self.buddy_requested = projectile;
 		}
 		else {
-			self.buddy_requested.buddy = nail;
-			nail.buddy = self.buddy_requested;
+			self.buddy_requested.buddy = projectile;
+			projectile.buddy = self.buddy_requested;
 		}
 		// first one to hit does its damage and then nerfs its 'buddy'
 	}
+	return projectile;
 }
 float() perforator_low_ammo {
-	if (self.items & IT_NAILGUN) w_fire(b_nailgun);
+	if (self.items & IT_NAILGUN) w_try_fire(b_nailgun);
 	return FALSE;
 }
 float() CheckValidSpikeTouch {

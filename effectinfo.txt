@@ -1,0 +1,472 @@
+//======================================================================
+// PARTICLE DEF file
+//
+// MOD    : AD v1.80 - (Arcane Dimensions)
+// Date   : August 2020
+// Author : Simon "Sock" OCallaghan
+// Website: www.simonoc.com
+//
+//======================================================================
+// SHOTGUN
+//
+// Stage 1 - wall decal
+// Stage 2 - sparks
+// Stage 2b - grey smoke
+//
+// Underwater
+// Stage 3 - grey impact particles
+// Stage 3b - grey/blue bubbles
+//
+//======================================================================
+
+// Long sparks
+effect TE_BULLET_WALL
+count 0
+type spark
+blend alpha
+bounce -1
+color 0xC02005 0x805015
+size 8 8
+stretchfactor 2
+alpha 256 256 0
+velocityjitter 1000 1000 1000
+velocitymultiplier 2000
+airfriction 5
+gravity 1
+sizeincrease -10
+
+// Short sparks
+effect TE_BULLET_WALL
+count 1
+type spark
+blend alpha
+bounce -1
+color 0xA07060 0xC08015
+size 8 8
+stretchfactor 2
+alpha 256 256 256
+velocityjitter 1000 1000 1000
+velocitymultiplier 2000
+airfriction 12
+gravity 0.5
+sizeincrease -10
+
+// Super short sparks
+effect TE_BULLET_WALL
+count 2
+time 0.1 0.1
+type spark
+blend alpha
+bounce -1
+color 0xA08060 0xF0C0A0
+size 6 6
+stretchfactor 2
+alpha 256 256 512
+velocityjitter 1200 1200 1200
+velocitymultiplier 2000
+airfriction 20
+gravity 0
+sizeincrease -10
+
+// effect TE_BULLET_WALL
+// count 1
+// type spark
+// bounce -1
+// color 0x801010 0xFFA020
+// size 50 50
+// stretchfactor 1
+// alpha 256 256 0
+// // velocityjitter 1000 1000 1000
+// velocitymultiplier 5000
+// airfriction 0
+// gravity 0
+// sizeincrease -2000
+// tex 40 0
+
+effect TE_BULLET_WALL
+count 0
+bounce -1
+color 0x605050 0x605050
+size 5 5
+stretchfactor 1
+alpha 256 256 256
+velocityjitter 5 5 5
+velocitymultiplier 1000
+airfriction 3
+gravity 0
+sizeincrease 3
+tex 0 0
+
+effect TE_BULLET_WALL
+count 0
+bounce -1
+color 0x605050 0x605050
+size 5 5
+stretchfactor 1
+alpha 256 256 256
+velocityjitter 5 5 5
+velocitymultiplier 1000
+airfriction 3.5
+gravity 0
+sizeincrease 3.5
+tex 0 0
+
+effect TE_BULLET_WALL
+count 1
+bounce -1
+color 0x605050 0x605050
+size 5 5
+stretchfactor 1
+alpha 256 256 256
+velocityjitter 10 10 10
+velocitymultiplier 1000
+airfriction 5
+gravity 0
+sizeincrease 4
+tex 0 0
+
+effect TE_BULLET_WALL
+count 1
+bounce -1
+color 0x605050 0x605050
+size 5 5
+stretchfactor 1
+alpha 256 256 256
+velocityjitter 30 30 30
+velocitymultiplier 1000
+airfriction 5.5
+gravity 0
+sizeincrease 4.5
+tex 0 0
+
+effect TE_BULLET_WALL
+count 2
+bounce -1
+color 0x605050 0x605050
+size 5 5
+stretchfactor 1
+alpha 256 256 256
+velocityjitter 50 50 50
+velocitymultiplier 1000
+airfriction 6
+gravity 0
+sizeincrease 5
+tex 0 0
+
+effect TE_BULLET_WALL
+count 2
+bounce -1
+color 0x605050 0x605050
+size 5 5
+stretchfactor 1
+alpha 256 256 256
+velocityjitter 50 50 50
+velocitymultiplier 1000
+airfriction 6.5
+gravity 0
+sizeincrease 5
+tex 0 0
+
+effect TE_BULLET_WALL
+count 2
+bounce -1
+color 0x504540 0x605050
+size 8 8
+stretchfactor 1
+alpha 256 256 256
+velocityjitter 100 100 200
+velocitymultiplier 1000
+airfriction 7
+gravity 0
+sizeincrease 6
+tex 0 0
+
+effect TE_BULLET_WALL
+count 4
+bounce -1
+color 0x302520 0x403020
+size 10 10
+stretchfactor 1
+alpha 256 256 256
+velocityjitter 200 200 200
+velocitymultiplier 1000
+airfriction 10
+gravity 0
+sizeincrease 7
+tex 0 0
+
+effect TE_BULLET_WALL
+count 3
+bounce -1
+color 0x191005 0x403020
+size 20 20
+stretchfactor 1
+alpha 256 256 256
+velocityjitter 1000 1000 1000
+velocitymultiplier 1000
+airfriction 20
+gravity 0
+sizeincrease 10
+tex 0 0
+
+
+// gar field
+// effect TE_BULLET_WALL
+// count 1
+// bounce -1
+// color 0xAAAAAA 0xAAAAAA
+// size 20 20
+// alpha 256 256 0
+// // velocityjitter 200 200 200
+// velocitymultiplier 500
+// airfriction 5
+// gravity 0
+// sizeincrease 0
+// tex 209 209
+
+// effect TE_BULLET_WALL
+// type smoke
+// tex 112 119						// Large smokey impact
+// count 5
+// bounce -1
+// color 0x000000 0x000000
+// size 5 10
+// stretchfactor 10
+// alpha 32 128 96
+// // velocityjitter 100 100 100
+// velocitymultiplier 2000
+// airfriction 20
+// //gravity 0.01
+// sizeincrease 10
+// blend alpha
+
+effect TE_BULLET_WALL
+count 1
+type decal
+tex 112 119						// Large smokey impact
+size 6 6
+alpha 180 180 0
+staincolor 0x801010 0xFFA020
+
+effect TE_BULLET_WALL
+count 1
+type decal
+tex 112 119						// Large smokey impact
+size 8 12
+alpha 60 100 0
+staincolor 0x801010 0xFFA020
+
+// effect TE_BULLET_FLESH
+// count 10
+// type blood
+// bounce -1
+// blend alpha
+// color 0x440000 0x440000
+// size 4 4
+// gravity 1
+// staincolor 0xFFFFFF 0xFFFFFF
+// stainsize 10 10
+// stainalpha 256 256
+
+// Super short sparks
+effect TE_BULLET_FLESH
+count 2
+type spark
+blend alpha
+time 0.1 0.1
+bounce -1
+color 0x330000 0x550000
+size 3 3
+stretchfactor 2
+velocityjitter 600 600 600
+velocitymultiplier 1500
+airfriction 20
+gravity 2
+sizeincrease -10
+
+// Super short sparks
+effect TE_BULLET_FLESH
+count 2
+type spark
+blend alpha
+bounce -1
+color 0x330000 0x550000
+size 3 3
+stretchfactor 2
+velocityjitter 600 600 600
+velocitymultiplier 1500
+airfriction 10
+gravity 1
+sizeincrease -10
+
+effect TE_BULLET_FLESH
+count 4
+type blood						// produce decals on impact
+blend alpha
+color 0x330000 0x550000
+size 20 20
+bounce -1						// Produce decals on impact
+gravity 4						// Move downward quickly
+airfriction 4
+liquidfriction 4				// Sink through water
+velocityjitter 128 128 128			// Large movement cube
+velocitymultiplier -2			// Using parameter velocity
+rotate 0 360 0 0				// Rotation variety
+staincolor 0xFFFFFF 0xFFFFFF
+
+effect TE_BULLET_FLESH
+count 2
+type blood						// produce decals on impact
+blend alpha
+color 0x330000 0x550000
+size 10 10
+bounce -1						// Produce decals on impact
+gravity 2						// Move downward quickly
+airfriction 6
+liquidfriction 4				// Sink through water
+velocityjitter 256 256 256			// Large movement cube
+velocitymultiplier -64			// Using parameter velocity
+rotate 0 360 0 0				// Rotation variety
+staincolor 0xFFFFFF 0xFFFFFF
+
+effect TE_BULLET_FLESH
+count 3
+type blood						// produce decals on impact
+blend alpha
+color 0x330000 0x550000
+size 20 20
+bounce -1						// Produce decals on impact
+gravity 2						// Move downward quickly
+airfriction 4
+liquidfriction 4				// Sink through water
+velocityjitter 64 64 64			// Large movement cube
+velocitymultiplier -128			// Using parameter velocity
+rotate 0 360 0 0				// Rotation variety
+staincolor 0xFFFFFF 0xFFFFFF
+
+effect TE_BULLET_FLESH
+count 5
+type blood						// produce decals on impact
+blend alpha
+color 0x330000 0x550000
+size 10 10
+bounce -1						// Produce decals on impact
+gravity 1.5						// Move downward quickly
+airfriction 4
+liquidfriction 4				// Sink through water
+velocityjitter 128 128 256			// Large movement cube
+velocitymultiplier 256			// Using parameter velocity
+rotate 0 360 0 0				// Rotation variety
+staincolor 0xFFFFFF 0xFFFFFF
+
+effect TE_BULLET_FLESH
+count 5
+type blood						// produce decals on impact
+blend alpha
+color 0x330000 0x550000
+size 5 5
+bounce -1						// Produce decals on impact
+gravity 1						// Move downward quickly
+airfriction 1
+liquidfriction 4				// Sink through water
+velocityjitter 128 128 256			// Large movement cube
+velocitymultiplier 256			// Using parameter velocity
+rotate 0 360 0 0				// Rotation variety
+staincolor 0xFFFFFF 0xFFFFFF
+
+effect TE_BULLET_FLESH
+count 5
+type blood						// produce decals on impact
+blend alpha
+color 0x330000 0x550000
+size 5 5
+bounce -1						// Produce decals on impact
+gravity 1						// Move downward quickly
+airfriction 1
+liquidfriction 4				// Sink through water
+velocityjitter 128 128 256			// Large movement cube
+velocitymultiplier -256			// Using parameter velocity
+rotate 0 360 0 0				// Rotation variety
+staincolor 0xFFFFFF 0xFFFFFF
+
+effect TE_BULLET_FLESH
+count 5
+type blood						// produce decals on impact
+blend alpha
+color 0x330000 0x550000
+size 5 5
+bounce -1						// Produce decals on impact
+gravity 2						// Move downward quickly
+airfriction 4
+liquidfriction 4				// Sink through water
+velocityjitter 128 128 1024			// Large movement cube
+velocitymultiplier 512			// Using parameter velocity
+rotate 0 360 0 0				// Rotation variety
+staincolor 0xFFFFFF 0xFFFFFF
+
+effect TE_BULLET_FLESH
+count 3
+type blood						// produce decals on impact
+blend alpha
+color 0x330000 0x550000
+size 3 3
+bounce -1						// Produce decals on impact
+gravity 1						// Move downward quickly
+airfriction 0.5
+liquidfriction 4				// Sink through water
+velocityjitter 128 128 256			// Large movement cube
+velocitymultiplier 512			// Using parameter velocity
+rotate 0 360 0 0				// Rotation variety
+staincolor 0xFFFFFF 0xFFFFFF
+
+effect TE_BULLET_FLESH
+count 2
+type blood						// produce decals on impact
+blend alpha
+color 0x330000 0x550000
+size 3 3
+bounce -1						// Produce decals on impact
+gravity 2						// Move downward quickly
+airfriction 10
+liquidfriction 4				// Sink through water
+velocityjitter 600 600 600			// Large movement cube
+velocitymultiplier 1500			// Using parameter velocity
+rotate 0 360 0 0				// Rotation variety
+staincolor 0xFFFFFF 0xFFFFFF
+
+effect TE_BULLET_FLESH
+count 2
+type blood						// produce decals on impact
+blend alpha
+color 0x330000 0x550000
+size 3 3
+bounce -1						// Produce decals on impact
+gravity 2						// Move downward quickly
+airfriction 20
+liquidfriction 4				// Sink through water
+velocityjitter 600 600 600			// Large movement cube
+velocitymultiplier 3000			// Using parameter velocity
+rotate 0 360 0 0				// Rotation variety
+staincolor 0xFFFFFF 0xFFFFFF
+
+// Super short sparks
+effect TE_BULLET_FLESH
+count 3
+type spark
+blend alpha
+bounce -1
+color 0x330000 0x550000
+size 3 3
+stretchfactor 2
+alpha 256 256 256
+velocityjitter 600 600 600
+velocitymultiplier 1500
+airfriction 10
+gravity 2
+sizeincrease -10
+
+effect L_LANTERN
+lightradius 150
+lightcolor 1 1 1
+lightshadow 1
+

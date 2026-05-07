@@ -82,67 +82,110 @@ void() init_cvars
 	// explosive launchers
 	autocvar(w_rockets_max_ammo, 100);
 	
-	autocvar(w_grenadelauncher_fn_fire, "grenade");
-	autocvar(w_grenadelauncher_fn_origin, "rocket");
-	autocvar(w_grenadelauncher_fn_spread, "oval");
-	autocvar(w_grenadelauncher_ammo_type, "rockets");
-	autocvar(w_grenadelauncher_ammo_cost, 1);
-	autocvar(w_grenadelauncher_attack_delay, 0.6);
-	autocvar(w_grenadelauncher_dmg, 120);
-	autocvar(w_grenadelauncher_splash_dmg, 120);
-	autocvar(w_grenadelauncher_dmg_spread, 0);
-	autocvar(w_grenadelauncher_spread, '0.955 0.955 0');
-	autocvar(w_grenadelauncher_shot_count, 1);
-	autocvar(w_grenadelauncher_clip_size, 0);
-	autocvar(w_grenadelauncher_reload_delay_first, 0);
-	autocvar(w_grenadelauncher_reload_delay, 0);
-
-	autocvar(w_grenade_speed, 600);
-	autocvar(w_grenade_vel_mult, '600 0 200');
 	// also splash damage
 
+	// rocket ========================================
 	autocvar(w_rocketlauncher_fn_fire, "rocket");
-	autocvar(w_rocketlauncher_fn_origin, "rocket");
-	autocvar(w_rocketlauncher_fn_spread, "oval");
-	autocvar(w_rocketlauncher_ammo_type, "rockets");
-	autocvar(w_rocketlauncher_ammo_cost, 1);
 	autocvar(w_rocketlauncher_attack_delay, 0.8);
-	autocvar(w_rocketlauncher_dmg, 120);
-	autocvar(w_rocketlauncher_splash_dmg, 120);
-	autocvar(w_rocketlauncher_dmg_spread, 0);
 	autocvar(w_rocketlauncher_shot_count, 1);
+	autocvar(w_rocketlauncher_dmg, 120);
+	autocvar(w_rocketlauncher_dmg_splash, 120);
+	// spread
+	autocvar(w_rocketlauncher_fn_spread, "oval");
 	autocvar(w_rocketlauncher_spread, '0 0 0');
+	// origin
+	autocvar(w_rocketlauncher_fn_origin, "rocket");
+	autocvar(w_rocketlauncher_origin_angle_change, 0);
+	autocvar(w_rocketlauncher_origin_angle_offset, 0);
+	autocvar(w_rocketlauncher_origin_base_offset, 0);
+	autocvar(w_rocketlauncher_origin_circle_radius, 0);
+	// ammo
+	autocvar(w_rocketlauncher_ammo_cost, 1);
+	autocvar(w_rocketlauncher_ammo_type, "rocket");
 	autocvar(w_rocketlauncher_clip_size, 0);
-	autocvar(w_rocketlauncher_reload_delay_first, 0);
 	autocvar(w_rocketlauncher_reload_delay, 0);
+	autocvar(w_rocketlauncher_reload_delay_first, 0);
+	autocvar(w_rocketlauncher_reload_max_ammo, 0);
+	// projectile
+	autocvar(w_rocketlauncher_vel, '1000 0 0');
+	autocvar(w_rocketlauncher_impart_vel, '0 0 0');
+	autocvar(w_rocketlauncher_penetration_limit, 0);
+	autocvar(w_rocketlauncher_bounce, 0);
+	autocvar(w_rocketlauncher_timer, 0);
+	// fx
+	autocvar(w_rocketlauncher_punch_angle, '-2 0 0');
+	autocvar(w_rocketlauncher_sfx_fire, "weapons/guncock.wav");
 
-	autocvar(w_rocket_speed, 1000, "Speed of rocket launcher's projectile. Default: 1000. Aims incorrectly after ~2000.");
-	autocvar(w_rocket_speed_spread, 0);
-	// also splash damage
+
+	// grenade ========================================
+	autocvar(w_grenadelauncher_fn_fire, "grenade");
+	autocvar(w_grenadelauncher_attack_delay, 0.6);
+	autocvar(w_grenadelauncher_shot_count, 1);
+	autocvar(w_grenadelauncher_dmg, 120);
+	autocvar(w_grenadelauncher_dmg_splash, 120);
+	// spread
+	autocvar(w_grenadelauncher_fn_spread, "oval");
+	autocvar(w_grenadelauncher_spread, '0.955 0.955 0');
+	// origin
+	autocvar(w_grenadelauncher_fn_origin, "rocket");
+	autocvar(w_grenadelauncher_origin_angle_change, 0);
+	autocvar(w_grenadelauncher_origin_angle_offset, 0);
+	autocvar(w_grenadelauncher_origin_base_offset, 0);
+	autocvar(w_grenadelauncher_origin_circle_radius, 0);
+	// ammo
+	autocvar(w_grenadelauncher_ammo_cost, 1);
+	autocvar(w_grenadelauncher_ammo_type, "rocket");
+	autocvar(w_grenadelauncher_clip_size, 0);
+	autocvar(w_grenadelauncher_reload_delay, 0);
+	autocvar(w_grenadelauncher_reload_delay_first, 0);
+	autocvar(w_grenadelauncher_reload_max_ammo, 0);
+	// projectile
+	autocvar(w_grenadelauncher_vel, '600 0 130');
+	autocvar(w_grenadelauncher_impart_vel, '0 0 0');
+	autocvar(w_grenadelauncher_bounce, 0.75);
+	autocvar(w_grenadelauncher_timer, 2.5);
+	autocvar(w_grenadelauncher_penetration_limit, 0);
+	autocvar(w_grenadelauncher_trace_len, 1024);
+	// fx
+	autocvar(w_grenadelauncher_punch_angle, '-2 0 0');
+	autocvar(w_grenadelauncher_sfx_fire, "weapons/guncock.wav");
+
 	
 	// shotguns
-	
 	autocvar(w_shells_max_ammo, 100);
 	
+	// shotgun
 	autocvar(w_shotgun_fn_fire, "bullet");
-	autocvar(w_shotgun_fn_origin, "bullet");
-	autocvar(w_shotgun_fn_spread, "oval");
-	autocvar(w_shotgun_ammo_type, "shells");
-	autocvar(w_shotgun_ammo_cost, 1);
 	autocvar(w_shotgun_attack_delay, 0.5);
-	autocvar(w_shotgun_dmg, 4);
-	autocvar(w_shotgun_splash_dmg, 0);
-	autocvar(w_shotgun_dmg_spread, 0);
-	autocvar(w_shotgun_dmg_spread_dead, 2);
-	autocvar(w_shotgun_penetration_limit, 8);
 	autocvar(w_shotgun_shot_count, 6);
+	autocvar(w_shotgun_dmg, 4);
+	autocvar(w_shotgun_dmg_splash, 0);
+	// spread
+	autocvar(w_shotgun_fn_spread, "oval");
 	autocvar(w_shotgun_spread, '2.291 2.291 0');
+	// origin
+	autocvar(w_shotgun_fn_origin, "bullet");
+	autocvar(w_shotgun_origin_angle_change, 0);
+	autocvar(w_shotgun_origin_angle_offset, 0);
+	autocvar(w_shotgun_origin_base_offset, 0);
+	autocvar(w_shotgun_origin_circle_radius, 0);
+	// ammo
+	autocvar(w_shotgun_ammo_cost, 1);
+	autocvar(w_shotgun_ammo_type, "shells");
+	autocvar(w_shotgun_clip_size, 0);
+	autocvar(w_shotgun_reload_delay, 0);
+	autocvar(w_shotgun_reload_delay_first, 0);
+	autocvar(w_shotgun_reload_max_ammo, 0);
+	// properties
+	autocvar(w_shotgun_vel, '0 0 0');
+	autocvar(w_shotgun_impart_vel, '0 0 0');
+	autocvar(w_shotgun_bounce, 0);
+	autocvar(w_shotgun_timer, 0);
+	autocvar(w_shotgun_penetration_limit, 8);
+	autocvar(w_shotgun_trace_len, 2048);
+	// fx
 	autocvar(w_shotgun_punch_angle, '-2 0 0');
 	autocvar(w_shotgun_sfx_fire, "weapons/guncock.wav");
-	autocvar(w_shotgun_clip_size, 8);
-	autocvar(w_shotgun_reload_delay_first, 1.0);
-	autocvar(w_shotgun_reload_delay, 0.4);
-	autocvar(w_shotgun_reload_max_ammo, 1);
 	
 	autocvar(w_soldiershotgun_fn_fire, "bullet");
 	autocvar(w_soldiershotgun_fn_origin, "bullet");
@@ -162,6 +205,7 @@ void() init_cvars
 	autocvar(w_soldiershotgun_clip_size, 0);
 	autocvar(w_soldiershotgun_reload_delay_first, 0);
 	autocvar(w_soldiershotgun_reload_delay, 0);
+	autocvar(w_soldiershotgun_trace_len, 2048);
 
 	autocvar(w_supershotgun_fn_fire, "bullet");
 	autocvar(w_supershotgun_fn_origin, "bullet");
@@ -180,6 +224,7 @@ void() init_cvars
 	autocvar(w_supershotgun_clip_size, 0);
 	autocvar(w_supershotgun_reload_delay_first, 0);
 	autocvar(w_supershotgun_reload_delay, 0);
+	autocvar(w_supershotgun_trace_len, 2048);
 
 	// energy weapons
 	autocvar(w_cells_max_ammo, 100);
@@ -267,16 +312,6 @@ fnptr_spread() wcvar_fn_spread {
 	}
 	return spread_error;
 }
-// fnptr_origin() wcvar_fn_origin {
-// 	string func_name = wcvar_str(self.w_ctx.name, "fn_origin");
-// 	string lowercase = strconv(1, 0, 0, func_name);
-// 	switch(lowercase) {
-// 		case "bullet": return origin_bullet;
-// 		case "circle": return origin_circle;
-// 		case "rocket": return origin_rocket;
-// 	}
-// 	return origin_error;
-// }
 fnptr_origin() wcvar_fn_origin {
 	string func_name = wcvar_str(self.w_ctx.name, "fn_origin");
 	string lowercase = strconv(1, 0, 0, func_name);
@@ -284,8 +319,19 @@ fnptr_origin() wcvar_fn_origin {
 		case "bullet": return origin_bullet;
 		case "circle": return origin_circle;
 		case "rocket": return origin_rocket;
+		case "grid": return origin_grid;
 	}
 	return origin_error;
+}
+fnptr_hit() wcvar_fn_hit {
+	string func_name = wcvar_str(self.w_ctx.name, "fn_hit");
+	string lowercase = strconv(1, 0, 0, func_name);
+	switch(lowercase) {
+		case "bullet": return hit_bullet;
+		// case "explode": return hit_explode;
+		// case "explosion": return hit_explode;
+	}
+	return __NULL__;
 }
 typedef .float float_ref;
 float_ref() w_reserve_ammo {

@@ -54,9 +54,9 @@ void() NoOpVoid {}
 Branch() NoOpContinue { return Branch::Continue; }
 Branch() NoOpEnd { return Branch::End; }
 
-float() supershotgun_low_ammo {
-	if (self.items & IT_SHOTGUN) w_fire(b_shotgun);
-	return FALSE;
+Branch() supershotgun_low_ammo {
+	if (self.items & IT_SHOTGUN) w_try_fire(b_shotgun);
+	return Branch::End;
 }
 Branch(float damage, vector dir) NoOpHitContinue { return Branch::Continue; }
 Branch(float damage, vector dir) NoOpHitEnd { return Branch::End; }
@@ -107,32 +107,36 @@ HitOutcome(entity ignore_ent, float penetrations) HitBranch {
 	if (penetrations == 0) return HitOutcome::Inanimate;
 	return HitOutcome::End;
 }
-void(vector origin, vector dir_with_spread) fire_bullet {
+entity(vector origin, vector dir_with_spread) fire_bullet {
 	TraceHitscan(origin, dir_with_spread, self);
+	return __NULL__;
 }
 void(vector origin, vector dir_with_spread, entity initial_ignore) TraceHitscan {
-	float dmg, dmg_dead;
 	vector destination;
 	entity ignore_ent = initial_ignore;
+	float max_len =  wcvar(self.w_ctx.name, "trace_len");
+	float remaining_len = max_len;
 	// penetrate dead enemies, but deal damage to potentially gib
 	for (float penetrations = 0; penetrations <= 8; penetrations++)
 	{
-		// dmg_dead: sum half original damage, half original damage as spread, half original spread?
-		dmg = wcvar_spread(self.w_ctx.name, "dmg");
-		dmg_dead = 0.5 * (dmg + dmg * random());
-		destination = origin + dir_with_spread * 2048;
+		destination = origin + dir_with_spread * remaining_len;
 		traceline2(origin, destination, ignore_ent, 0);
 		HitOutcome outcome = HitBranch(ignore_ent, penetrations);
-		Branch cont = hit_callbacks(outcome, dmg, dmg_dead, dir_with_spread);
+		fnptr_hit fn_hit = wcvar_fn_hit();
+		Branch cont = fn_hit(outcome, dir_with_spread);
 		if (cont == Branch::Continue) {
+			float traveled = vlen(trace_endpos - origin);
 			origin = trace_endpos + dir_with_spread * 0.1;
 			ignore_ent = trace_ent;
+			remaining_len -= (traveled + 0.1);
 			continue;
 		}
 		break;
 	}
 }
-Branch(HitOutcome outcome, float dmg, float dmg_dead, vector dir_with_spread) hit_callbacks {
+Branch(HitOutcome outcome, vector dir_with_spread) hit_bullet {
+	float dmg = wcvar(self.w_ctx.name, "dmg");
+	float dmg_dead = 0.5 * (dmg + dmg * random());
 	switch (outcome) {
 		case HitOutcome::Dead: return self.w_ctx.fn_hit_dead(dmg_dead, dir_with_spread);
 		case HitOutcome::Ignore: return self.w_ctx.fn_hit_ignore(dmg, dir_with_spread);
@@ -143,8 +147,11 @@ Branch(HitOutcome outcome, float dmg, float dmg_dead, vector dir_with_spread) hi
 	}
 	return Branch::End;
 }
-vector(vector _1, float _2, float _3, float _4) origin_bullet {
+vector() origin_bullet {
 	vector shot_origin = self.origin + v_forward * 10;
 	shot_origin_z = self.absmin_z + self.size_z * 0.7;
 	return shot_origin;
 }
+// void() test {
+// 	hashtable t = hash_createtab(64, EV_STRING);
+// }

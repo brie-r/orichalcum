@@ -2,7 +2,7 @@
 #pragma autoproto
 // #pragma target fte
 //#define NO_CSQC 1		// uncomment for a CSQC-less build
-
+// #define FTE_QC_HASHTABLES
 defs.qc
 shareddefs.qc
 constants.qc

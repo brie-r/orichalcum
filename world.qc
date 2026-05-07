@@ -408,6 +408,7 @@ void() worldspawn =
 	// precache particles
 	p_hit_inanimate = particleeffectnum("TE_BULLET_WALL");
 	p_hit_flesh = particleeffectnum("TE_BULLET_FLESH");
+	l_lantern = particleeffectnum("L_LANTERN");
 }
 
 void() StartFrame =

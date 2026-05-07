@@ -472,22 +472,22 @@ void() W_Attack =
 	self.show_hostile = time + 1;
 	
 	if (self.weapon == IT_SHOTGUN) {
-		w_fire(b_shotgun);
+		w_try_fire(b_shotgun);
 	}
 	else if (self.weapon == IT_SUPER_SHOTGUN) {
-		w_fire(b_supershotgun);
+		w_try_fire(b_supershotgun);
 	}
 	else if (self.weapon == IT_NAILGUN)	{
-		w_fire(b_nailgun);
+		w_try_fire(b_nailgun);
 	}
 	else if (self.weapon == IT_SUPER_NAILGUN) {
-		w_fire(b_perforator);
+		w_try_fire(b_perforator);
 	}
 	else if (self.weapon == IT_GRENADE_LAUNCHER) {
-		w_fire(b_grenadelauncher);
+		w_try_fire(b_grenadelauncher);
 	}
 	else if (self.weapon == IT_ROCKET_LAUNCHER) {
-		w_fire(b_rocketlauncher);
+		w_try_fire(b_rocketlauncher);
 	}
 	else if (self.weapon == IT_LIGHTNING)
 	{

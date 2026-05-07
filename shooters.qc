@@ -67,7 +67,8 @@ void() spikeshooter_fire =
 	else if (self.spawnflags & SF_SHOOT_ROCKET)
 	{
 		sound (self, CHAN_VOICE, "weapons/sgun1.wav", self.volume, ATTN_NORM);
-		e = launch_rocket(self.origin, dir * 1000, 1, T_MissileTouch);
+		e = launch_rocket(self.origin, dir * 1000);
+		e.touch = T_MissileTouch;
 	}
 	else
 	{

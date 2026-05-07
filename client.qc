@@ -1613,6 +1613,8 @@ Called every frame after physics are run
 */
 void() PlayerPostThink =
 {
+	// self.effects = self.effects | EF_BRIGHTLIGHT;
+
 	if ( intermission ) return;
 	
 	if (self.view_ofs == '0 0 0')

@@ -1,0 +1,98 @@
+// supershotgun
+set w_supershotgun_fn_fire "bullet"
+set w_supershotgun_attack_delay 0.5
+set w_supershotgun_shot_count 25
+set w_supershotgun_dmg 8
+set w_supershotgun_dmg_splash 0
+// spread
+set w_supershotgun_fn_spread "oval"
+set w_supershotgun_spread "0 0 0"
+// origin
+set w_supershotgun_fn_origin "grid"
+set w_supershotgun_origin_angle_change 0
+set w_supershotgun_origin_angle_offset 0
+set w_supershotgun_origin_base_offset 0
+set w_supershotgun_origin_circle_radius 0
+// ammo
+set w_supershotgun_ammo_cost 0
+set w_supershotgun_ammo_type "shells"
+set w_supershotgun_clip_size 0
+set w_supershotgun_reload_delay 0
+set w_supershotgun_reload_delay_first 0
+set w_supershotgun_reload_max_ammo 0
+// properties
+set w_supershotgun_vel "0 0 0"
+set w_supershotgun_impart_vel "0 0 0"
+set w_supershotgun_bounce 0
+set w_supershotgun_timer 0
+set w_supershotgun_penetration_limit 0
+set w_supershotgun_trace_len 100
+// fx
+set w_supershotgun_punch_angle "-2 0 0"
+set w_supershotgun_sfx_fire "weapons/guncock.wav"
+
+// grenade ========================================
+set w_grenadelauncher_fn_fire "grenade"
+set w_grenadelauncher_attack_delay 0.6
+set w_grenadelauncher_shot_count 1
+set w_grenadelauncher_dmg 120
+set w_grenadelauncher_dmg_splash 120
+// spread
+set w_grenadelauncher_fn_spread "oval"
+set w_grenadelauncher_spread "0 0 0"
+// origin
+set w_grenadelauncher_fn_origin "rocket"
+set w_grenadelauncher_origin_angle_change 0
+set w_grenadelauncher_origin_angle_offset 0
+set w_grenadelauncher_origin_base_offset 0
+set w_grenadelauncher_origin_circle_radius 0
+// ammo
+set w_grenadelauncher_ammo_cost 0
+set w_grenadelauncher_ammo_type "rocket"
+set w_grenadelauncher_clip_size 0
+set w_grenadelauncher_reload_delay 0
+set w_grenadelauncher_reload_delay_first 0
+set w_grenadelauncher_reload_max_ammo 0
+// properties
+set w_grenadelauncher_vel "600 0 130"
+set w_grenadelauncher_impart_vel "0 0 0"
+set w_grenadelauncher_bounce 0.75
+set w_grenadelauncher_timer 2.5
+set w_grenadelauncher_penetration_limit 0
+set w_grenadelauncher_trace_len 2048
+// fx
+set w_grenadelauncher_punch_angle "-2 0 0"
+set w_grenadelauncher_sfx_fire "weapons/guncock.wav"
+
+// rocket ========================================
+set w_rocketlauncher_fn_fire "rocket"
+set w_rocketlauncher_attack_delay 0.8
+set w_rocketlauncher_shot_count 1
+set w_rocketlauncher_dmg 120
+set w_rocketlauncher_dmg_splash 120
+// spread
+set w_rocketlauncher_fn_spread "oval"
+set w_rocketlauncher_spread "0 0 0"
+// origin
+set w_rocketlauncher_fn_origin "rocket"
+set w_rocketlauncher_origin_angle_change 0
+set w_rocketlauncher_origin_angle_offset 0
+set w_rocketlauncher_origin_base_offset 0
+set w_rocketlauncher_origin_circle_radius 0
+// ammo
+set w_rocketlauncher_ammo_cost 0
+set w_rocketlauncher_ammo_type "rocket"
+set w_rocketlauncher_clip_size 0
+set w_rocketlauncher_reload_delay 0
+set w_rocketlauncher_reload_delay_first 0
+set w_rocketlauncher_reload_max_ammo 0
+// properties
+set w_rocketlauncher_vel "1200 0 0"
+set w_rocketlauncher_impart_vel "0 0 0"
+set w_rocketlauncher_bounce 0
+set w_rocketlauncher_timer 0
+set w_rocketlauncher_penetration_limit 0
+set w_rocketlauncher_trace_len 2048
+// fx
+set w_rocketlauncher_punch_angle "-2 0 0"
+set w_rocketlauncher_sfx_fire "weapons/guncock.wav"

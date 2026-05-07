@@ -114,17 +114,13 @@ fire_rocket
 player rocket launch inherited from generic launch_rocket
 ================
 */
-void(vector origin, vector dir) fire_rocket {
-	// sound (self, CHAN_WEAPON, "weapons/sgun1.wav", 1, ATTN_NORM);
-	// self.punchangle_x = -2;
-	
-	float speed = wcvar_spread("rocket", "speed");
-	entity rocket = launch_rocket(origin, dir * speed, 1, T_MissileTouch);
-	rocket.w_ctx.name = self.w_ctx.name;
-
-	// self.attack_finished = time + wcvar(self.w_ctx.name, "attack_delay");
+entity(vector origin, vector dir_with_spread) fire_rocket {
+	vector vel = local_to_world(wcvar_vec((self.w_ctx.name), "vel"), dir_with_spread);
+	entity projectile = launch_rocket(origin, vel);
+	projectile.w_ctx.name = self.w_ctx.name;
+	projectile.touch = T_MissileTouch;
+	return projectile;
 }
-
 vector origin_rocket() {
 	return self.origin + v_forward * 8 + '0 0 16';
 }
@@ -175,23 +171,15 @@ void() GrenadeTouch {
 fire_grenade
 ================
 */
-void(vector origin, vector dir) fire_grenade {
-	vector vel = grenade_vel(dir);
-	entity grenade = launch_grenade(origin, vel);
-	grenade.w_ctx.name = self.w_ctx.name;
-	grenade.touch = GrenadeTouch;
-	grenade.th_die = GrenadeExplode;
+entity(vector origin, vector dir_with_spread) fire_grenade {
+	
+	vector vel = local_to_world(wcvar_vec(self.w_ctx.name, "vel"), dir_with_spread);
+	entity projectile = launch_grenade(origin, vel);
+	projectile.w_ctx.name = self.w_ctx.name;
+	projectile.touch = GrenadeTouch;
+	projectile.th_die = GrenadeExplode;
+	return projectile;
 }
 vector grenade_origin() {
 	return self.origin;
-}
-vector(vector dir) grenade_vel {
-	vector spread = wcvar_vec(self.w_ctx.name, "spread");
-	vector vel_mult = wcvar_vec("grenade", "vel_mult");
-	// vector dir = SpreadOval(aim (self, AUTOAIM_DIST), spread);
-	vector dir_with_spread = self.w_ctx.fn_spread(dir, spread);
-	vector fwd = normalize(dir_with_spread);
-	vector right = normalize(CrossProduct(fwd, VEC_UP));
-	vector up = normalize(CrossProduct(right, fwd));
-	return fwd * vel_mult_x + right * vel_mult_y + up * vel_mult_z;
 }

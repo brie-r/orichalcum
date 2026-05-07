@@ -278,6 +278,7 @@ float sandyMadeThis; // for special-casing SOMEBODY's stale keyvalues and clumsy
 // for precaching particles
 float p_hit_inanimate;
 float p_hit_flesh;
+float l_lantern;
 
 //================================================
 

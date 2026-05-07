@@ -485,13 +485,12 @@ launch_rocket
 basic missile, used by player and ogre rocket fire
 ========
 */
-entity(vector org, vector vel, float shot_count, void() fn_touch) launch_rocket =
+entity(vector org, vector vel) launch_rocket =
 {
 	entity missile;
 	
 	missile = launch_projectile(org, vel, "rocket");	// FLYMISSILE
-	missile.dmg = 100;
-	missile.touch = fn_touch;
+	missile.dmg = wcvar(self.w_ctx.name, "dmg");
 	missile.type = "missile";
 	
 	SUB_ChangeModel (missile, "progs/missile.mdl");
@@ -509,7 +508,8 @@ entity(vector org, vector vel, void() fn_touch) launch_lavamissile =
 {
 	entity missile;
 	
-	missile = launch_rocket(org, vel, 1, fn_touch);	// FLYMISSILE
+	missile = launch_rocket(org, vel);	// FLYMISSILE
+	missile.touch = fn_touch;
 	missile.classname = "lavaball";
 	missile.avelocity = '200 200 200';
 	SUB_ChangeModel (missile, "progs/lavaball.mdl");
@@ -528,7 +528,7 @@ entity(vector org, vector vel) launch_grenade =
 	entity grenade;
 	
 	grenade = toss_projectile(org, vel, "grenade");
-	grenade.lifetime_finished = time + 2.5;
+	grenade.lifetime_finished = time + wcvar(self.w_ctx.name, "timer");
 	grenade.avelocity = '300 300 300';
 	SUB_ChangeModel (grenade, "progs/grenade.mdl");
 	
@@ -541,7 +541,7 @@ void(vector normal) GrenadeForceBounce;
 vector(vector incident, vector normal, float dampening) reflect;
 
 // From engine
-float GRENADE_BACKOFF = 1.5;
+// float GRENADE_BACKOFF = 1.5;
 
 void() GrenadeHandlePhysics = {
 	float dot;
@@ -604,7 +604,8 @@ void() GrenadeForceBounceThink = {
 
 void(vector normal) GrenadeForceBounce = {
 	// bounce grenade off surface
-	self.velocity = reflect(-self.velocity, normal, 2-GRENADE_BACKOFF);
+	// self.velocity = reflect(-self.velocity, normal, 2-GRENADE_BACKOFF);
+	self.velocity = reflect(-self.velocity, normal, 1 - wcvar(self.w_ctx.name, "bounce"));
 
 	// cache velocity
 	self.pos1 = self.velocity;
