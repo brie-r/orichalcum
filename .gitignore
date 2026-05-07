@@ -1,5 +1,4 @@
 history.txt
-cvars.xlsx
-progs.dat
-progs.lno
-csprogs.dat
+*.xlsx
+*.dat
+*.lno
