@@ -156,6 +156,7 @@ void() init_cvars
 	
 	// shotgun
 	autocvar(w_shotgun_fn_fire, "bullet");
+	autocvar(w_shotgun_fn_hit, "bullet");
 	autocvar(w_shotgun_attack_delay, 0.5);
 	autocvar(w_shotgun_shot_count, 6);
 	autocvar(w_shotgun_dmg, 4);
@@ -188,6 +189,7 @@ void() init_cvars
 	autocvar(w_shotgun_sfx_fire, "weapons/guncock.wav");
 	
 	autocvar(w_soldiershotgun_fn_fire, "bullet");
+	autocvar(w_soldiershotgun_fn_hit, "bullet");
 	autocvar(w_soldiershotgun_fn_origin, "bullet");
 	autocvar(w_soldiershotgun_fn_spread, "oval");
 	autocvar(w_soldiershotgun_ammo_type, "shells");
@@ -208,6 +210,7 @@ void() init_cvars
 	autocvar(w_soldiershotgun_trace_len, 2048);
 
 	autocvar(w_supershotgun_fn_fire, "bullet");
+	autocvar(w_supershotgun_fn_hit, "bullet");
 	autocvar(w_supershotgun_fn_origin, "bullet");
 	autocvar(w_supershotgun_fn_spread, "oval");
 	autocvar(w_supershotgun_ammo_type, "shells");

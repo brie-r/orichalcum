@@ -1,5 +1,6 @@
 // supershotgun
 set w_supershotgun_fn_fire "bullet"
+set w_supershotgun_fn_hit "bullet"
 set w_supershotgun_attack_delay 0.5
 set w_supershotgun_shot_count 25
 set w_supershotgun_dmg 8
