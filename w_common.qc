@@ -111,7 +111,6 @@ void(b_weapon weapon) w_fire {
 	}
 	self.cnt += 1;
 }
-
 AmmoStatus(float ammo_cost) CheckAmmoStatus {
 	if (self.primary_ammo == 0 && ammo_cost > 0) return AmmoStatus::None;
 	else if (self.primary_ammo < ammo_cost && self.primary_ammo > 0) return AmmoStatus::Low;
