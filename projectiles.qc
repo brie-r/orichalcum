@@ -399,7 +399,6 @@ entity(vector org, vector vel, string cname) toss_projectile =
 	g = launch_projectile(org, vel, cname);
 	g.movetype = MOVETYPE_BOUNCE;
 	g.type = "grenade";
-	
 	g.think = projectile_toss_think;
 	g.nextthink = time;
 	g.touch = projectile_touch_null;

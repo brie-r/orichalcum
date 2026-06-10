@@ -388,11 +388,8 @@ void() hurler_missile_touch =
 
 void() MagmaBall =
 {
-	vector org, vec;
-	entity missile;
-
-	org = self.origin + v_forward*8 + '0 0 24';
-	vec = normalize(enemy_vispos() - org + enemy_aim_vertical());
+	vector org = self.origin + v_forward*8 + '0 0 24';
+	vector vec = normalize(enemy_vispos() - org + enemy_aim_vertical());
 
 	makevectors(self.angles);
 	if (angledif(self.ideal_yaw, self.angles_y) > 80)	// no ass lavaballs
@@ -403,7 +400,7 @@ void() MagmaBall =
 	}
 
 	sound (self, CHAN_WEAPON, "boss1/throw.wav", 1, ATTN_NORM);
-	missile = launch_lavamissile (org, vec * 900, hurler_missile_touch);
+	entity missile = launch_lavamissile (org, vec * 900, hurler_missile_touch);
 	missile.avelocity = '200 100 300';
 }
 

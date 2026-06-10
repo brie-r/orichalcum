@@ -13,7 +13,7 @@ typedef Branch() fnptr_low_ammo;
 typedef Branch() fnptr_no_ammo;
 // typedef void(b_weapon weapon, vector dir) fnptr_fire_action;
 typedef vector(vector dir, vector spread) fnptr_spread;
-typedef Branch(float damage, vector dir) fnptr_hit_alive, fnptr_hit_dead, fnptr_hit_inanimate, fnptr_hit_damageable, fnptr_hit_ignore, fnptr_hit_end;
+typedef Branch(vector dir) fnptr_hit_alive, fnptr_hit_dead, fnptr_hit_inanimate, fnptr_hit_damageable, fnptr_hit_ignore, fnptr_hit_end;
 typedef vector() fnptr_origin;
 // typedef void(vector org, vector vel, vector shot_count);
 typedef struct {
@@ -114,14 +114,15 @@ void(b_weapon weapon) w_try_fire {
 	self.w_ctx.fn_spread = wcvar_fn_spread();
 
 	self.w_ctx.fn_fire = wcvar_fn_fire();
-
 	float shot_count = wcvar(self.w_ctx.name, "shot_count");
 	vector spread = wcvar_vec(self.w_ctx.name, "spread");
 	ClearMultiDamage ();
 	for (float shot = 0; shot < shot_count; shot++) {
 		vector origin = self.w_ctx.fn_origin();
 		vector dir_with_spread = self.w_ctx.fn_spread(dir, spread);
+		dprint("BEFORE\n\n");
 		self.w_ctx.fn_fire(origin, dir_with_spread);
+		dprint("AFTER\n\n");
 		self.shot_num += 1;
 	}
 	ApplyMultiDamage ();
@@ -150,7 +151,7 @@ vector(vector dir, vector spread) SpreadOval {
 	vec = random() * vec_scale(spread, normalize(vec));
 	return dir + sin(vec_x * DEG2RAD) * v_right + cos((vec_y + 90) * DEG2RAD) * v_up;
 }
-void(vector origin, vector dir_with_spread) FireError {
+void(vector origin, vector dir_with_spread) fire_error {
 	dprint("ERROR: fire function not found");
 }
 vector(vector _1, float _2, float _3, float _4) origin_error {
@@ -300,4 +301,47 @@ vector() origin_grid {
 		(base_offset.x + offset.x) * v_right + 
 		base_offset.y * v_forward + 
 		(base_offset.z + offset.z) * v_up);
+}
+HitOutcome(entity hit_ent) projectile_hit_outcome = {
+	if (hit_ent == __NULL__ || hit_ent == world) return HitOutcome::Inanimate;
+	if (hit_ent.solid == SOLID_BSP && hit_ent.takedamage == FALSE) return HitOutcome::Inanimate;
+	// if (hit_ent.takedamage) {
+	if (hit_ent.takedamage) {
+		// if (hit_ent.health <= 0 || hit_ent.deadflag >= DEAD_DYING) return HitOutcome::Dead;
+		float dead_soon = HasBeenShotToDeath(trace_ent);
+		if (dead_soon) return HitOutcome::Dead;
+		if (hit_ent.flags & FL_MONSTER || hit_ent.classname == "player") return HitOutcome::Alive;
+		return HitOutcome::Damageable;
+	}
+	return HitOutcome::Inanimate;
+};
+Branch(HitOutcome outcome, vector dir_with_spread) hit_branch {
+	switch (outcome) {
+		case HitOutcome::Dead: return self.w_ctx.fn_hit_dead(dir_with_spread);
+		case HitOutcome::Ignore: return self.w_ctx.fn_hit_ignore(dir_with_spread);
+		case HitOutcome::Alive: return self.w_ctx.fn_hit_alive(dir_with_spread);
+		case HitOutcome::Inanimate: return self.w_ctx.fn_hit_inanimate(dir_with_spread);
+		case HitOutcome::Damageable: return self.w_ctx.fn_hit_damageable(dir_with_spread);
+		case HitOutcome::End: return self.w_ctx.fn_hit_end(dir_with_spread);
+	}
+	return Branch::End;
+}
+void() projectile_touch_dispatch {
+	if (other == self.owner) return;
+	if (CheckProjectilePassthru()) return;
+	if (pointcontents(self.origin) == CONTENT_SKY) {
+		remove(self);
+		return;
+	}
+	vector dir = normalize(self.velocity);
+	traceline(self.origin - dir * 16, self.origin + dir * 16, FALSE, self);
+	if (trace_ent != other) {
+		trace_ent = other;
+		trace_endpos = self.origin;
+	}
+	HitOutcome outcome = projectile_hit_outcome(other);
+	Branch cont = hit_branch(outcome, dir);
+	if (cont == Branch::Continue) {
+		projectile_passthru();
+	}
 }

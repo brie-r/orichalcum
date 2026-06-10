@@ -1,12 +1,31 @@
+void(float f) test {
+	print("lookin good");
+	print(ftos(f));
+}
 // #include "csdefs.qc"
 void() init_cvars
 {
+
+	if (isfunction("test")) {
+		callfunction(3, "test");
+	}
+	else {
+		print("false");
+	}
+
 	// TODO
 	// check CvarWithSpread() lines up with random()
 	// check CvarWithVecSpread() lines up with random()
 	// deal with crandom() instances
 	// per-weapon self-damage ratio / knockback / self-knockback
 
+
+
+	autocvar(sv_respawn, TRUE);
+	autocvar(sv_last_player_standing, TRUE);
+	autocvar(sv_rounds_per_map, TRUE);
+	autocvar(sv_maps_per_game, TRUE);
+	autocvar(sv_respawn, TRUE);
 	// server
 	autocvar(sv_knockback, 8, "When damaged, multiply damage by this to calculate added momentum. Default: 8");
 	autocvar(sv_selfdamage, 1, "Toggle whether you take damage from sources you own (eg your rocket's explosion). Doesn't affect knockback. Default: 1");
@@ -22,7 +41,6 @@ void() init_cvars
 	autocvar(w_axe_dmg_spread, 0);
 
 	// nailguns
-	
 	autocvar(w_nails_max_ammo, 200);
 	
 	autocvar(w_nailgun_fn_fire, "nail");
@@ -31,7 +49,7 @@ void() init_cvars
 	autocvar(w_nailgun_ammo_cost, 1);
 	autocvar(w_nailgun_attack_delay, 0.09);
 	autocvar(w_nailgun_dmg, 9);
-	autocvar(w_nailgun_splash_dmg, 0);
+	autocvar(w_nailgun_dmg_splash, 0);
 	autocvar(w_nailgun_spread, '0 0 0');
 	autocvar(w_nailgun_sfx_fire, "weapons/rocket1i.wav");
 	
@@ -55,7 +73,7 @@ void() init_cvars
 	autocvar(w_perforator_ammo_cost, 2);
 	autocvar(w_perforator_attack_delay, 0.09);
 	autocvar(w_perforator_dmg, 9);
-	autocvar(w_perforator_splash_dmg, 0);
+	autocvar(w_perforator_dmg_splash, 0);
 	// autocvar(w_perforator_spread, '2.292 2.292 0');
 	// perforator spread definitely converted wrong
 	// redo someday
@@ -156,7 +174,6 @@ void() init_cvars
 	
 	// shotgun
 	autocvar(w_shotgun_fn_fire, "bullet");
-	autocvar(w_shotgun_fn_hit, "bullet");
 	autocvar(w_shotgun_attack_delay, 0.5);
 	autocvar(w_shotgun_shot_count, 6);
 	autocvar(w_shotgun_dmg, 4);
@@ -189,14 +206,13 @@ void() init_cvars
 	autocvar(w_shotgun_sfx_fire, "weapons/guncock.wav");
 	
 	autocvar(w_soldiershotgun_fn_fire, "bullet");
-	autocvar(w_soldiershotgun_fn_hit, "bullet");
 	autocvar(w_soldiershotgun_fn_origin, "bullet");
 	autocvar(w_soldiershotgun_fn_spread, "oval");
 	autocvar(w_soldiershotgun_ammo_type, "shells");
 	autocvar(w_soldiershotgun_ammo_cost, 0);
 	autocvar(w_soldiershotgun_attack_delay, 0.5);
 	autocvar(w_soldiershotgun_dmg, 4);
-	autocvar(w_soldiershotgun_splash_dmg, 0);
+	autocvar(w_soldiershotgun_dmg_splash, 0);
 	autocvar(w_soldiershotgun_dmg_spread, 0);
 	autocvar(w_soldiershotgun_dmg_spread_dead, 0);
 	autocvar(w_soldiershotgun_penetration_limit, 0);
@@ -210,15 +226,13 @@ void() init_cvars
 	autocvar(w_soldiershotgun_trace_len, 2048);
 
 	autocvar(w_supershotgun_fn_fire, "bullet");
-	autocvar(w_supershotgun_fn_hit, "bullet");
 	autocvar(w_supershotgun_fn_origin, "bullet");
 	autocvar(w_supershotgun_fn_spread, "oval");
 	autocvar(w_supershotgun_ammo_type, "shells");
 	autocvar(w_supershotgun_ammo_cost, 2);
 	autocvar(w_supershotgun_attack_delay, 0.7);
 	autocvar(w_supershotgun_dmg, 4);
-	autocvar(w_supershotgun_splash_dmg, 0);
-	autocvar(w_supershotgun_dmg_spread, 0);
+	autocvar(w_supershotgun_dmg_splash, 0);
 	autocvar(w_supershotgun_penetration_limit, 8);
 	autocvar(w_supershotgun_shot_count, 14);
 	autocvar(w_supershotgun_spread, '7.97 4.574 0');
@@ -232,18 +246,49 @@ void() init_cvars
 	// energy weapons
 	autocvar(w_cells_max_ammo, 100);
 	
-	// autocvar(w_lightninggun, "fn_origin");
-	autocvar(w_lightninggun_ammo_type, "cells");
-	autocvar(w_lightninggun_ammo_cost, 1);
-	autocvar(w_lightninggun_attack_delay, 0.1);
-	autocvar(w_lightninggun_dmg, 30);
-	autocvar(w_lightninggun_splash_dmg, 0);
-	autocvar(w_lightninggun_dmg_spread, 0);
+	// claw ========================================
+	autocvar(w_lightninggun_fn_fire, "claw");
+	autocvar(w_lightninggun_attack_delay, 0.8);
+	autocvar(w_lightninggun_shot_count, 1);
+	autocvar(w_lightninggun_dmg, 120);
+	autocvar(w_lightninggun_dmg_splash, 120);
+	// spread
+	autocvar(w_lightninggun_fn_spread, "oval");
 	autocvar(w_lightninggun_spread, '0 0 0');
+	// origin
+	autocvar(w_lightninggun_fn_origin, "rocket");
+	autocvar(w_lightninggun_origin_angle_change, 0);
+	autocvar(w_lightninggun_origin_angle_offset, 0);
+	autocvar(w_lightninggun_origin_base_offset, 0);
+	autocvar(w_lightninggun_origin_circle_radius, 0);
+	// ammo
+	autocvar(w_lightninggun_ammo_cost, 1);
+	autocvar(w_lightninggun_ammo_type, "rocket");
 	autocvar(w_lightninggun_clip_size, 0);
-	autocvar(w_lightninggun_reload_delay_first, 0);
 	autocvar(w_lightninggun_reload_delay, 0);
-	// autocvar(w_lightninggun_shot_count, 1);
+	autocvar(w_lightninggun_reload_delay_first, 0);
+	autocvar(w_lightninggun_reload_max_ammo, 0);
+	// projectile
+	autocvar(w_lightninggun_vel, '1000 0 0');
+	autocvar(w_lightninggun_impart_vel, '0 0 0');
+	autocvar(w_lightninggun_penetration_limit, 0);
+	autocvar(w_lightninggun_bounce, 0);
+	autocvar(w_lightninggun_timer, 0);
+	// fx
+	autocvar(w_lightninggun_punch_angle, '-2 0 0');
+	autocvar(w_lightninggun_sfx_fire, "weapons/guncock.wav");
+	
+	// // autocvar(w_lightninggun, "fn_origin");
+	// autocvar(w_lightninggun_ammo_type, "cells");
+	// autocvar(w_lightninggun_ammo_cost, 1);
+	// autocvar(w_lightninggun_attack_delay, 0.1);
+	// autocvar(w_lightninggun_dmg, 30);
+	// autocvar(w_lightninggun_dmg_splash, 0);
+	// autocvar(w_lightninggun_spread, '0 0 0');
+	// autocvar(w_lightninggun_clip_size, 0);
+	// autocvar(w_lightninggun_reload_delay_first, 0);
+	// autocvar(w_lightninggun_reload_delay, 0);
+	// // autocvar(w_lightninggun_shot_count, 1);
 
 }
 
@@ -280,8 +325,12 @@ vector (string cvar) cvar_vec {
 }
 
 fnptr_fire() wcvar_fn_fire {
+	dprint("selecting fire fn\n");
 	string func_name = wcvar_str(self.w_ctx.name, "fn_fire");
 	string lowercase = strconv(1, 0, 0, func_name);
+	dprint(lowercase);
+	dprint("\n");
+
 	switch(lowercase) {
 		case "fire_bullet": return fire_bullet;
 		case "fire_bullets": return fire_bullet;
@@ -303,8 +352,9 @@ fnptr_fire() wcvar_fn_fire {
 		case "grenades": return fire_grenade;
 		case "nail": return W_FireNailgun;
 		case "perforator_nail": return fire_perforator;
+		case "claw": return fire_claw;
 	}
-	return FireError;
+	return fire_error;
 }
 fnptr_spread() wcvar_fn_spread {
 	string func_name = wcvar_str(self.w_ctx.name, "fn_spread");
@@ -325,16 +375,6 @@ fnptr_origin() wcvar_fn_origin {
 		case "grid": return origin_grid;
 	}
 	return origin_error;
-}
-fnptr_hit() wcvar_fn_hit {
-	string func_name = wcvar_str(self.w_ctx.name, "fn_hit");
-	string lowercase = strconv(1, 0, 0, func_name);
-	switch(lowercase) {
-		case "bullet": return hit_bullet;
-		// case "explode": return hit_explode;
-		// case "explosion": return hit_explode;
-	}
-	return __NULL__;
 }
 typedef .float float_ref;
 float_ref() w_reserve_ammo {

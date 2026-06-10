@@ -23,9 +23,11 @@ item_powerups.qc
 item_keys_runes.qc
 item_backpack.qc
 
+dispatch.qc
 projectiles.qc
 weapons.qc
 w_common.qc
+w_custom.qc
 w_axe.qc
 w_lightning.qc
 w_shotguns.qc

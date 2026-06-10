@@ -42,10 +42,14 @@ const b_weapon b_supershotgun = {
 	.fn_low_ammo = supershotgun_low_ammo,
 	.fn_no_ammo = NoOpEnd,
 
-	.fn_hit_alive = TraceHitAlive,
-	.fn_hit_dead = TraceHitDead,
-	.fn_hit_inanimate = TraceHitInanimate,
-	.fn_hit_damageable = TraceHitDamageable,
+	.fn_hit_alive = trace_explode_hit_alive,
+	// .fn_hit_alive = TraceHitAlive,
+	.fn_hit_dead = trace_explode_hit_dead,
+	// .fn_hit_dead = TraceHitDead,
+	.fn_hit_inanimate = trace_explode_hit_inanimate,
+	// .fn_hit_inanimate = TraceHitInanimate,
+	.fn_hit_damageable = trace_explode_hit_damageable,
+	// .fn_hit_damageable = TraceHitDamageable,
 	.fn_hit_ignore = NoOpHitContinue,
 	.fn_hit_end = NoOpHitEnd
 };
@@ -58,8 +62,8 @@ Branch() supershotgun_low_ammo {
 	if (self.items & IT_SHOTGUN) w_try_fire(b_shotgun);
 	return Branch::End;
 }
-Branch(float damage, vector dir) NoOpHitContinue { return Branch::Continue; }
-Branch(float damage, vector dir) NoOpHitEnd { return Branch::End; }
+Branch(vector dir) NoOpHitContinue { return Branch::Continue; }
+Branch(vector dir) NoOpHitEnd { return Branch::End; }
 void(float damage, vector dir) TraceHitFlesh {
 	vector origin = trace_endpos - dir*4;
 	vector reflect_dir = dir - trace_plane_normal * 2 * DotProduct(dir, trace_plane_normal);
@@ -67,27 +71,31 @@ void(float damage, vector dir) TraceHitFlesh {
 	AddMultiDamage (trace_ent, damage);
 	pointparticles(p_hit_flesh, origin, reflect_dir, 1);
 }
-Branch(float damage, vector dir) TraceHitAlive {
-	TraceHitFlesh(damage, dir);
+Branch(vector dir) TraceHitAlive {
+	float dmg = wcvar(self.w_ctx.name, "dmg");
+	TraceHitFlesh(dmg, dir);
 	return Branch::End;
 }
-Branch(float damage, vector dir) TraceHitDead {
-	TraceHitFlesh(damage, dir);
+Branch(vector dir) TraceHitDead {
+	float dmg = wcvar(self.w_ctx.name, "dmg");
+	float dmg_dead = 0.5 * (dmg + dmg * random());
+	TraceHitFlesh(dmg_dead, dir);
 	return Continue;
 }
-Branch(float damage, vector dir) TraceHitObject {
+Branch(vector dir) TraceHitObject {
 	vector origin = trace_endpos;
 	vector reflect_dir = dir - trace_plane_normal * 2 * DotProduct(dir, trace_plane_normal);
 	reflect_dir = normalize(reflect_dir);
 	pointparticles(p_hit_inanimate, origin, reflect_dir, 1);
 	return Branch::End;
 }
-Branch(float damage, vector dir) TraceHitInanimate {
-	return TraceHitObject(damage, dir);
+Branch(vector dir) TraceHitInanimate {
+	return TraceHitObject(dir);
 }
-Branch(float damage, vector dir) TraceHitDamageable {
-	AddMultiDamage (trace_ent, damage);
-	return TraceHitObject(damage, dir);
+Branch(vector dir) TraceHitDamageable {
+	float dmg = wcvar(self.w_ctx.name, "dmg");
+	AddMultiDamage (trace_ent, dmg);
+	return TraceHitObject(dir);
 }
 Branch(entity t) HasBeenShotToDeath {
 	if (t.multi_dmg < t.health) return Branch::End;
@@ -122,8 +130,7 @@ void(vector origin, vector dir_with_spread, entity initial_ignore) TraceHitscan 
 		destination = origin + dir_with_spread * remaining_len;
 		traceline2(origin, destination, ignore_ent, 0);
 		HitOutcome outcome = HitBranch(ignore_ent, penetrations);
-		fnptr_hit fn_hit = wcvar_fn_hit();
-		Branch cont = fn_hit(outcome, dir_with_spread);
+		Branch cont = hit_branch(outcome, dir_with_spread);
 		if (cont == Branch::Continue) {
 			float traveled = vlen(trace_endpos - origin);
 			origin = trace_endpos + dir_with_spread * 0.1;
@@ -134,21 +141,10 @@ void(vector origin, vector dir_with_spread, entity initial_ignore) TraceHitscan 
 		break;
 	}
 }
-Branch(HitOutcome outcome, vector dir_with_spread) hit_bullet {
-	float dmg = wcvar(self.w_ctx.name, "dmg");
-	float dmg_dead = 0.5 * (dmg + dmg * random());
-	switch (outcome) {
-		case HitOutcome::Dead: return self.w_ctx.fn_hit_dead(dmg_dead, dir_with_spread);
-		case HitOutcome::Ignore: return self.w_ctx.fn_hit_ignore(dmg, dir_with_spread);
-		case HitOutcome::Alive: return self.w_ctx.fn_hit_alive(dmg, dir_with_spread);
-		case HitOutcome::Inanimate: return self.w_ctx.fn_hit_inanimate(dmg, dir_with_spread);
-		case HitOutcome::Damageable: return self.w_ctx.fn_hit_damageable(dmg, dir_with_spread);
-		case HitOutcome::End: return self.w_ctx.fn_hit_end(dmg, dir_with_spread);
-	}
-	return Branch::End;
-}
 vector() origin_bullet {
 	vector shot_origin = self.origin + v_forward * 10;
+	// + v_up * -10;
+	// thought this might fix the no knockback when looking straight down issue, no luck
 	shot_origin_z = self.absmin_z + self.size_z * 0.7;
 	return shot_origin;
 }

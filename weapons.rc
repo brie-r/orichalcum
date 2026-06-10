@@ -1,10 +1,13 @@
+set sv_selfdamage 0
+set sv_knockback 0.75
+
 // supershotgun
 set w_supershotgun_fn_fire "bullet"
 set w_supershotgun_fn_hit "bullet"
 set w_supershotgun_attack_delay 0.5
 set w_supershotgun_shot_count 25
-set w_supershotgun_dmg 8
-set w_supershotgun_dmg_splash 0
+set w_supershotgun_dmg 75
+set w_supershotgun_dmg_splash 5
 // spread
 set w_supershotgun_fn_spread "oval"
 set w_supershotgun_spread "0 0 0"

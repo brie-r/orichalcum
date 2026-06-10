@@ -399,6 +399,7 @@ void() W_ResetWeaponState =
 		// self.weaponmodel = "progs/g_claw.mdl";
 	else if (self.weapon == IT_LIGHTNING) {
 		self.weaponmodel = "progs/v_light.mdl";
+		self.w_ctx = b_lightninggun;
 	}
 	else {
 		self.weaponmodel = string_null;
@@ -470,7 +471,9 @@ void() W_Attack =
 	
 	// moved after axe so that silent swings don't wake monsters
 	self.show_hostile = time + 1;
-	
+	// move the above to the end, add alerts_enemies entity field, branch on w_try_fire so it only happens when you succeessfully fire, flatten structure
+
+
 	if (self.weapon == IT_SHOTGUN) {
 		w_try_fire(b_shotgun);
 	}
@@ -491,9 +494,10 @@ void() W_Attack =
 	}
 	else if (self.weapon == IT_LIGHTNING)
 	{
-		player_light1();
-		self.attack_finished = time + wcvar("lightninggun", "attack_delay");
-		sound (self, CHAN_AUTO, "weapons/lstart.wav", 1, ATTN_NORM);
+		w_try_fire(b_lightninggun);
+		// player_light1();
+		// self.attack_finished = time + wcvar("lightninggun", "attack_delay");
+		// sound (self, CHAN_AUTO, "weapons/lstart.wav", 1, ATTN_NORM);
 	}
 }
 

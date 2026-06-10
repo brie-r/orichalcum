@@ -409,6 +409,13 @@ void() worldspawn =
 	p_hit_inanimate = particleeffectnum("TE_BULLET_WALL");
 	p_hit_flesh = particleeffectnum("TE_BULLET_FLESH");
 	l_lantern = particleeffectnum("L_LANTERN");
+
+	// id1/music/filename
+	precache_sound("bgm/filename.ogg");
+	ambientsound('0 0 0', "bgm/filename.ogg", 0.5, 1.0);
+
+
+
 }
 
 void() StartFrame =

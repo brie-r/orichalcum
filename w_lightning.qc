@@ -1,3 +1,20 @@
+const b_weapon b_lightninggun = {
+	.name = "lightninggun",
+	.fn_fire = fire_claw,
+	.fn_vfx = player_rocket1,
+
+	.fn_spread = SpreadOval,
+	.fn_low_ammo = NoOpEnd,
+	.fn_no_ammo = NoOpEnd,
+	
+	.fn_hit_alive = w_missile_touch,
+	.fn_hit_dead = NoOpHitEnd,
+	.fn_hit_inanimate = NoOpHitEnd,
+	.fn_hit_damageable = NoOpHitEnd,
+	.fn_hit_ignore = NoOpHitContinue,
+	.fn_hit_end = NoOpHitEnd
+};
+
 
 /*
 ===============

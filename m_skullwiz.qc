@@ -195,11 +195,8 @@ void() SkullAdeptMisThink =
 
 void() SkullAdeptMissile =
 {
-	vector org, vec;
-	entity missile;
-
-	org = self.origin + v_forward * 15 + v_right * -4 + v_up * 17;
-	vec = normalize(enemy_vispos() - org + enemy_aim_vertical());
+	vector org = self.origin + v_forward * 15 + v_right * -4 + v_up * 17;
+	vector vec = normalize(enemy_vispos() - org + enemy_aim_vertical());
 
 	makevectors(self.angles);
 	if (angledif(self.ideal_yaw, self.angles_y) > 80)	// no ass skulls
@@ -212,11 +209,14 @@ void() SkullAdeptMissile =
 	self.effects = self.effects | EF_MUZZLEFLASH;
 	sound (self, CHAN_WEAPON, "skullwiz/firemisl.wav", 1, ATTN_NORM);
 
-	if (skill == 3)
-		missile = launch_projectile(org, vec * 750, "skullmissile");
-	else
-		missile = launch_projectile(org, vec * 650, "skullmissile");
-
+	vector vel = vec;
+	if (skill == 3) {
+		vel *= 750;
+	}
+	else {
+		vel *= 650;
+	}
+	entity missile = launch_projectile(org, vel, "skullmissile");
 	SUB_ChangeModel (missile, "progs/skulshot.mdl");
 	missile.nextthink = time + 0.1;
 	missile.think = SkullAdeptMisThink;
@@ -339,20 +339,17 @@ void() SkullWizMagicBone =
     vec = normalize(enemy_vispos() - org + enemy_aim_vertical());
 	makevectors (self.angles);
 
-	if (angledif(self.ideal_yaw, self.angles_y) > 80)	// no ass magic bones
-	{
+	// no ass magic bones
+	if (angledif(self.ideal_yaw, self.angles_y) > 80) {
 		vec_x = v_forward_x;
 		vec_y = v_forward_y;
 		vec = normalize(vec);
 	}
 
-	if (skill == 3)
-	{
+	if (skill == 3) {
 		missile = launch_nail(org, vec * 1000);
 		missile.dmg = 18;
-	}
-	else
-	{
+	} else {
 		missile = launch_nail(org, vec * 950);
 		missile.dmg = 11;
 	}

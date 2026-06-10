@@ -88,7 +88,7 @@ void() T_MissileExplode {
 	// don't do radius damage to other, because all damage will be done in the impact
 	T_RadiusDamage (self, self.trueowner, dmg, other, DMGTYPE_EXPLOSION);
 }
-Branch(float damage, vector dir) w_missile_touch {
+Branch(vector dir) w_missile_touch {
 	T_MissileTouch();
 	return Branch::End;
 }
@@ -144,7 +144,7 @@ void() GrenadeExplode {
 
 void() GrenadeHandlePhysics;
 
-Branch(float damage, vector dir) w_grenade_touch {
+Branch(vector dir) w_grenade_touch {
 	GrenadeTouch();
 	return Branch::End;
 }
