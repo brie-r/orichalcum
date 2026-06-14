@@ -420,17 +420,8 @@ basic hurty projectile, used by trap_spikeshooter and player nailguns
 inherited from by lots of other hurty projectiles
 ========
 */
-entity(vector org, vector vel) launch_nail =
-{
+entity(vector org, vector vel) launch_nail {
 	entity spike;
-	
-	spike = launch_projectile(org, vel, "spike");
-	spike.touch = spike_touch;
-	
-	SUB_ChangeModel (spike, "progs/spike.mdl");
-	spike.dmg = 9;
-	// spike.dmg = wcvar(w_ctx.name, "dmg");
-	
 	return spike;
 }
 
@@ -440,19 +431,8 @@ launch_laser
 used by trapshooter and enforcers
 ========
 */
-entity(vector org, vector vel) launch_laser =
-{
+entity(vector org, vector vel) launch_laser {
 	entity spike;
-	
-	spike = launch_projectile(org, vel, "laser");
-	spike.touch = spike_touch;
-	spike.effects = EF_DIMLIGHT;
-	spike.movetype = MOVETYPE_FLY;	// enforcer lasers aren't FLYMISSILE in id106
-
-	SUB_ChangeModel (spike, "progs/laser.mdl");
-
-	spike.dmg = 12;
-	
 	return spike;
 }
 
@@ -462,19 +442,8 @@ launch_plasma
 used by Commandos -- J_D
 ========
 */
-entity(vector org, vector vel) launch_plasma =
-{
+entity(vector org, vector vel) launch_plasma {
 	entity spike;
-	
-	spike = launch_projectile(org, vel, "laser");
-	spike.touch = spike_touch;
-	spike.effects = EF_DIMLIGHT;
-	spike.movetype = MOVETYPE_FLY;
-
-	SUB_ChangeModel (spike, "progs/c_plasma.mdl");
-
-	spike.dmg = 16;
-	
 	return spike;
 }
 
@@ -487,13 +456,6 @@ basic missile, used by player and ogre rocket fire
 entity(vector org, vector vel) launch_rocket =
 {
 	entity missile;
-	
-	missile = launch_projectile(org, vel, "rocket");	// FLYMISSILE
-	missile.dmg = wcvar(self.w_ctx.name, "dmg");
-	missile.type = "missile";
-	
-	SUB_ChangeModel (missile, "progs/missile.mdl");
-	
 	return missile;
 }
 
@@ -506,13 +468,6 @@ exploding cthon lavaball
 entity(vector org, vector vel, void() fn_touch) launch_lavamissile =
 {
 	entity missile;
-	
-	missile = launch_rocket(org, vel);	// FLYMISSILE
-	missile.touch = fn_touch;
-	missile.classname = "lavaball";
-	missile.avelocity = '200 200 200';
-	SUB_ChangeModel (missile, "progs/lavaball.mdl");
-	
 	return missile;
 }
 
@@ -525,12 +480,6 @@ basic grenade, used by player and ogre
 entity(vector org, vector vel) launch_grenade =
 {
 	entity grenade;
-	
-	grenade = toss_projectile(org, vel, "grenade");
-	grenade.lifetime_finished = time + wcvar(self.w_ctx.name, "timer");
-	grenade.avelocity = '300 300 300';
-	SUB_ChangeModel (grenade, "progs/grenade.mdl");
-	
 	return grenade;
 }
 

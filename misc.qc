@@ -635,59 +635,23 @@ void() target_autosave =
 
 void() lavaball_touch =
 {
-	if (CheckProjectilePassthru()) return FALSE;
-	if (other.takedamage)
-	{
-		sound (self, CHAN_WEAPON, "zombie/z_hit.wav", 1, ATTN_IDLE);
-		T_Damage (other, self, self, self.dmg, DMGTYPE_LAVA);
-	}
-	remove(self);
 }
 
 void() lavaball_fly =
 {
-	entity fireball;
-	vector vel;
-	void() fn_touch;
-	vel = self.movedir * self.speed;
-	vel_x += crandom() * self.mangle_x;
-	vel_y += crandom() * self.mangle_y;
-	vel_z += crandom() * self.mangle_z;
-	if (!(self.spawnflags & 4))
-		fn_touch = lavaball_touch;
-	else
-		fn_touch = T_MissileTouch; // TODO: could be wrong
-	fireball = launch_lavamissile(self.origin, vel, fn_touch);
-	fireball.movetype = MOVETYPE_TOSS;
-	
-	fireball.classname = "fireball";
-
-
-	fireball.dmg = self.dmg;
 }
 
 void() lavaball_toggle = 
 {
-	self.state = !self.state;
-	if (!self.state)
-	{	
-		self.nextthink = 0;
-		return;
-	}
-	self.think = lavaball_idle;
-	self.nextthink = time + self.delay + random() * self.rand;
 }
 
 void() lavaball_use =
 {
-	self.nextthink = time + self.delay + random() * self.rand;
-	self.think = lavaball_fly;
+
 }
 
 void() lavaball_idle =
 {
-	lavaball_fly();
-	self.nextthink = time + self.wait + random() * self.rand;
 }
 
 /*QUAKED misc_fireball (0 .5 .8) (-8 -8 -8) (8 8 8) START_OFF BURST EXPLODE

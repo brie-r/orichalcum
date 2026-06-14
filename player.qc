@@ -217,41 +217,6 @@ void() player_nail =
 
 //============================================================================
 
-void() player_light1   =[$light1, player_light2  ] 
-{
-	if (!self.button0 || (self.customflags & (CFL_PLUNGE|CFL_LIMBO)))
-	{
-		player_run();
-		return;
-	}
-
-	self.effects = self.effects | EF_MUZZLEFLASH;
-	self.weaponframe = self.weaponframe + 1;
-	if (self.weaponframe == 5)
-		self.weaponframe = 1;
-
-	W_FireLightning();
-	self.attack_finished = time + 0.2;
-}
-void() player_light2   =[$light2, player_light1  ]
-{
-	if (!self.button0 || (self.customflags & (CFL_PLUNGE|CFL_LIMBO)))
-	{
-		player_run();
-		return;
-	}
-	
-	self.effects = self.effects | EF_MUZZLEFLASH;
-	self.weaponframe = self.weaponframe + 1;
-	if (self.weaponframe == 5)
-		self.weaponframe = 1;
-
-	W_FireLightning();
-	self.attack_finished = time + 0.2;
-}
-
-//============================================================================
-
 
 void() player_rocket1   =[$rockatt1, player_rocket2  ] {self.weaponframe=1;
 self.effects = self.effects | EF_MUZZLEFLASH;}

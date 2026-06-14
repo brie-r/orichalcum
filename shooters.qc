@@ -27,105 +27,16 @@ float SF_SHOOT_ACTIVATOR	= 16;
 ]
 */
 
-void() spikeshooter_fire =
-{
-	if (self.state) return;
-	
-	vector dir;
-	entity e;
-	
-	if (self.spawnflags & SF_SHOOT_ACTIVATOR)
-	{
-		if (!self.enemy)
-			self.enemy = activator;
-		dir = normalize(self.enemy.origin - self.origin);
-	}
-	else
-	{
-		if (self.target != string_null)
-			e = find(world, targetname, self.target);
-			
-		if (e)
-			dir = normalize(BoundsCenter(e) - self.origin);
-		else
-			dir = self.movedir;
-	}
-	
-	if (self.spawnflags & SF_SHOOT_LASER)
-	{
-		sound (self, CHAN_VOICE, "enforcer/enfire.wav", self.volume, ATTN_NORM);
-		dprint5("shot from ", vtos(self.origin), " at ",vtos(dir), "\n");
-		launch_laser (self.origin, dir*600);
-	}
-	else if (self.spawnflags & SF_SHOOT_OGRENADE)
-	{
-		sound (self, CHAN_VOICE, "weapons/grenade.wav", self.volume, ATTN_NORM);
-		e = launch_grenade(self.origin, dir * self.speed);
-		e.touch = OgreGrenadeTouch;
-		e.th_die = OgreGrenadeExplode;
-	}
-	else if (self.spawnflags & SF_SHOOT_ROCKET)
-	{
-		sound (self, CHAN_VOICE, "weapons/sgun1.wav", self.volume, ATTN_NORM);
-		e = launch_rocket(self.origin, dir * 1000);
-		e.touch = T_MissileTouch;
-	}
-	else
-	{
-		sound (self, CHAN_VOICE, "weapons/spike2.wav", self.volume, ATTN_NORM);
-		e = launch_nail (self.origin, dir * 500);
-		if (self.spawnflags & SF_SHOOT_SUPERSPIKE)
-		{
-			e.classname = "superspike";
-			e.skin = 1;
-			e.dmg = 18;
-		}
-	}
-}
+void() spikeshooter_fire {}
 
-void() shooter_proxy_think =
-{
-	self.buddy.enemy = self.enemy;
-	SUB_CallAsSelf(spikeshooter_fire,self.buddy);
-	remove(self);
-}
+void() shooter_proxy_think {}
 
-void() shooter_once_think =
-{
-	// iw - if a shooter is triggered more often than its .delay, nextthink is
-	// repeatedly overwritten and the shooter never fires (bbin1)
-	// lunaran - spawn a proxy that'll fire at the right time to 'queue up'
-	// shots, so that none are missed
-	if (self.nextthink)
-	{
-		entity shooty = spawn();
-		shooty.buddy = self;
-		shooty.enemy = activator;
-		shooty.think = shooter_proxy_think;
-		shooty.nextthink = time + self.delay;
-		return;
-	}
-	self.enemy = activator;
-	self.think = spikeshooter_fire;
-	self.nextthink = time + self.delay;
-}
+void() shooter_once_think {}
 
-void() shooter_think =
-{
-	spikeshooter_fire ();
-	self.nextthink = time + self.wait + self.rand * random();
-}
+void() shooter_think {}
 
-void() spikeshooter_use = {spikeshooter_fire();}	// for id1 hacks
-void() shooter_use =
-{
-	self.state = !(self.state);
-	
-	if (self.state) return;
-	
-	self.nextthink = time + self.delay;
-	self.enemy = activator;
-}
+void() spikeshooter_use {}	// for id1 hacks
+void() shooter_use {}
 
 /*QUAKED trap_spikeshooter (0 .5 .8) (-8 -8 -8) (8 8 8) SUPERSPIKE LASER OGRENADE ROCKET AT_ACTIVATOR
 When triggered, fires a spike in the direction set by "angle".

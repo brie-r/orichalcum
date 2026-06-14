@@ -368,42 +368,8 @@ void() W_ResetWeaponState =
 	self.weaponframe = 0;
 	//self.attack_finished = 0;	// don't lose attack debounce time from last attack,
 		// if any, or picking up/switching weapons can cause double attacks
-	
-	if (self.weapon == IT_AXE ) {
-		self.weaponmodel = "progs/v_axe2.mdl";
-	}
-	else if (self.weapon == IT_SHOTGUN) {
-		self.weaponmodel = "progs/v_shot.mdl";
-		self.w_ctx = b_shotgun;
-	}
-	else if (self.weapon == IT_SUPER_SHOTGUN) {
-		self.weaponmodel = "progs/v_shot2.mdl";
-		self.w_ctx = b_supershotgun;
-	}
-	else if (self.weapon == IT_NAILGUN) {
-		self.weaponmodel = "progs/v_nail.mdl";
-		self.w_ctx = b_nailgun;
-	}
-	else if (self.weapon == IT_SUPER_NAILGUN) {
-		self.weaponmodel = "progs/v_nail2.mdl";
-		self.w_ctx = b_perforator;
-	}
-	else if (self.weapon == IT_GRENADE_LAUNCHER) {
-		self.weaponmodel = "progs/v_rock.mdl";
-		self.w_ctx = b_grenadelauncher;
-	}
-	else if (self.weapon == IT_ROCKET_LAUNCHER) {
-		self.weaponmodel = "progs/v_rock2.mdl";
-		self.w_ctx = b_rocketlauncher;
-	}
-		// self.weaponmodel = "progs/g_claw.mdl";
-	else if (self.weapon == IT_LIGHTNING) {
-		self.weaponmodel = "progs/v_light.mdl";
-		self.w_ctx = b_lightninggun;
-	}
-	else {
-		self.weaponmodel = string_null;
-	}
+
+	self.weaponmodel = string_null;
 
 	W_SetCurrentAmmo();
 }
@@ -446,60 +412,7 @@ W_Attack
 An attack impulse can be triggered now
 ============
 */
-void() W_Attack =
-{
-	if (self.weapon && !W_HasAmmo(self.weapon))
-	{
-		//W_SelectBestWeapon();
-		if (!self.weapon || self.weapon == IT_AXE)
-		{
-			sprint (self, "not enough ammo.\n");
-			return;
-		}
-	}
-	if (self.customflags & (CFL_PLUNGE|CFL_LIMBO))
-		return;
-
-	makevectors	(self.v_angle);			// calculate forward angle for velocity
-
-	if (self.weapon == IT_AXE)
-	{
-		player_axe();
-		W_AxeSwing();
-		return;
-	}
-	
-	// moved after axe so that silent swings don't wake monsters
-	self.show_hostile = time + 1;
-	// move the above to the end, add alerts_enemies entity field, branch on w_try_fire so it only happens when you succeessfully fire, flatten structure
-
-
-	if (self.weapon == IT_SHOTGUN) {
-		w_try_fire(b_shotgun);
-	}
-	else if (self.weapon == IT_SUPER_SHOTGUN) {
-		w_try_fire(b_supershotgun);
-	}
-	else if (self.weapon == IT_NAILGUN)	{
-		w_try_fire(b_nailgun);
-	}
-	else if (self.weapon == IT_SUPER_NAILGUN) {
-		w_try_fire(b_perforator);
-	}
-	else if (self.weapon == IT_GRENADE_LAUNCHER) {
-		w_try_fire(b_grenadelauncher);
-	}
-	else if (self.weapon == IT_ROCKET_LAUNCHER) {
-		w_try_fire(b_rocketlauncher);
-	}
-	else if (self.weapon == IT_LIGHTNING)
-	{
-		w_try_fire(b_lightninggun);
-		// player_light1();
-		// self.attack_finished = time + wcvar("lightninggun", "attack_delay");
-		// sound (self, CHAN_AUTO, "weapons/lstart.wav", 1, ATTN_NORM);
-	}
-}
+void() W_Attack {}
 
 /*
 ============

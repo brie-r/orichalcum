@@ -345,3 +345,8 @@ void() projectile_touch_dispatch {
 		projectile_passthru();
 	}
 }
+Branch(entity t) HasBeenShotToDeath {
+	if (t.multi_dmg < t.health) return Branch::End;
+	if (DamageCanKill(t, t.multi_dmg)) return Branch::Continue;
+	return Branch::End;
+}

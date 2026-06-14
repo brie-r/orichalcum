@@ -615,51 +615,7 @@ void(entity targ, entity inflictor, float damage) T_MomentumApply = {
 T_RadiusDamage
 ============
 */
-void(entity inflictor, entity attacker, float damage, entity ignore, float dmgtype = DMGTYPE_EXPLOSION) T_RadiusDamage =
-{
-	// note: find downed zombies to gib first, then do radius damage, or else the radius 
-	// damage will knock far away zombies down, then immediately gib them too
-	if ((dmgtype & DMGTYPE_EXPLOSION) && damage > 48)
-		T_GibDownedZombies(inflictor.origin, damage);
-	
-	float 	points, dist;
-	entity	head;
-	
-	head = findradius(inflictor.origin, min(512, damage + 40));
-	
-	while (head)
-	{
-		if (head != ignore && head.takedamage)
-		{
-			// don't set off shootable doors/buttons with splash unless the player means it
-			if ((head.movetype == MOVETYPE_PUSH || head.th_die == multi_killed) && head.type != "explobox")
-			{
-				dist = vlen (inflictor.origin - BoundsCenter(head));
-				points = damage - (0.5 * dist);
-
-				// a grenade at rest touching shootable should intuitively trigger it
-				if ( !(inflictor.type == "grenade" && BoundsTouching(inflictor.origin, inflictor.origin, head.absmin, head.absmax, 2)) )
-					if (dist > damage / 3)
-						points = 0;
-			}
-			else
-			{
-				dist = vlen (inflictor.origin - head.origin);
-				points = damage - (0.5 * dist);
-				if (head == attacker && inflictor.type != "explobox")	// barrels never did half-self-splash in vanilla
-					points *= 0.5;
-			}
-			// shambler takes half damage from all explosions
-			//if (head.classname == "monster_shambler" && (dmgtype & DMGTYPE_EXPLOSION))
-			//	points *= 0.5;
-			// already halved by T_Damage
-
-			if (points > 0 && CanDamage ( head, inflictor.origin ) )
-				T_Damage (head, inflictor, attacker, points, dmgtype);
-		}
-		head = head.chain;
-	}
-}
+void(entity inflictor, entity attacker, float damage, entity ignore, float dmgtype = DMGTYPE_EXPLOSION) T_RadiusDamage {}
 
 /*
 ============
